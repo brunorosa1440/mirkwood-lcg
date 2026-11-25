@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mirkwood LCG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a quiet game table at night, the cards do the talking
+   IDEA: the felt playmat of an LCG, zones ruled in bronze like the user's own board
+   PICTURE: the board itself, with official card art when the image host is reachable, printed card faces otherwise
+   COLOUR and TYPE: near-black table, warm brown panels, one gold accent; sphere colours only on cards; Cinzel for card names, Figtree for UI
+   LAYOUT: menu pages as a single column of accordions; the board as three ruled rows filling a landscape screen */
+:root{color-scheme:dark;--bg:#0b0a09;--pan:#1d1915;--pan2:#26211b;--line:#3b332a;--ink:#efe8dc;--mut:#a59a8a;--gold:#d9b65f;--red:#b8392f;--grn:#3f9450;--blu:#3a90cc;
+  --ch:clamp(70px,calc((100dvh - 64px - env(safe-area-inset-bottom))/3 - 34px),190px);--cw:calc(var(--ch)*.716)}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+body{overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+a{color:var(--gold)}
+.top{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:14px max(5vw,16px) 0;padding-top:max(14px,env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.brand{font:700 20px Cinzel,serif;letter-spacing:.02em}.brand span{color:var(--gold);margin-left:6px;font-size:13px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{color:var(--mut);text-decoration:none;padding:10px 12px 12px;border-bottom:2px solid transparent;font-weight:500}
+nav a.on{color:var(--ink);border-color:var(--ink)}nav a.live{color:var(--gold)}
+.page{max-width:1000px;margin:0 auto;padding:28px max(5vw,16px) 60px;padding-bottom:max(60px,env(safe-area-inset-bottom))}
+h1{font:700 clamp(30px,5vw,44px)/1.05 Cinzel,serif;margin:0 0 10px}
+h2{font:600 20px/1.2 Figtree,sans-serif;margin:30px 0 12px}h2 small{color:var(--mut);font-weight:500}
+.lede{color:var(--mut);max-width:68ch;margin:0 0 24px}.muted{color:var(--mut)}
+.search,.bbar input{width:100%;max-width:520px;font-size:16px;padding:12px 16px;border-radius:10px;border:1px solid var(--line);background:#0f0d0b;color:var(--ink);margin-bottom:18px}
+.ed{border:1px solid color-mix(in srgb,var(--ec) 70%,#555);background:linear-gradient(180deg,color-mix(in srgb,var(--ec) 45%,#1b1814),#151210);border-radius:18px;margin-bottom:12px;overflow:hidden}
+.edh{display:flex;align-items:center;gap:12px;width:100%;padding:18px 20px;background:none;border:0;font-weight:700;font-size:clamp(17px,2.4vw,22px);text-align:left;min-height:56px}
+.dot{width:14px;height:14px;border-radius:50%;background:color-mix(in srgb,var(--ec) 60%,#777);flex:none}.dot.on{background:var(--gold);box-shadow:0 0 0 4px #d9b65f33}
+.chev{margin-left:auto;font-size:13px;color:var(--mut)}
+.scen{display:grid;gap:10px;padding:0 20px 20px}
+.sc{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:#161310;font-size:17px;min-height:52px}
+.sc small{font-size:13px;color:var(--gold);white-space:nowrap}
+button.sc:hover{border-color:var(--gold)}
+.sc.off{color:#6d665c;background:#13110f}.sc.off small{color:#5e574e}
+.how{margin-top:28px;border-top:1px solid var(--line);padding-top:14px;color:var(--mut)}.how summary{cursor:pointer;color:var(--ink);font-weight:600;min-height:44px;display:flex;align-items:center}
+.decks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:14px}
+.deck{border:1px solid var(--line);background:var(--pan);border-radius:14px;padding:12px;cursor:pointer;display:grid;gap:4px}
+.deck:hover{border-color:var(--gold)}.deck.off{opacity:.45;filter:grayscale(1)}
+.deck b{font-size:17px}.deck small{color:var(--mut)}
+.hstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px}
+.hmini{position:relative;aspect-ratio:.72;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,var(--sc),#1a1714 75%);display:flex;align-items:flex-end;padding:6px}
+.hmini b{font:600 11px/1.2 Cinzel,serif}.hmini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.tile{position:relative;cursor:pointer}.tile .card{width:100%;height:auto;aspect-ratio:.716}
+.tile.locked{opacity:.4;filter:grayscale(1)}.tile.pick .card{outline:2px solid var(--gold)}
+.qty{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.qty button{width:44px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--pan2);font-size:18px}
+.bbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line)}
+.bbar input{margin:0;max-width:260px}.bbar span{color:var(--mut);flex:1 1 200px}
+.gold,.ghost{border-radius:10px;padding:10px 18px;min-height:44px;font-weight:600;border:1px solid var(--line);text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.gold{background:var(--gold);color:#1b1408;border-color:var(--gold)}.gold:disabled{opacity:.4;cursor:default}
+.ghost{background:#14110e;color:var(--ink)}
+.ib{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#14110e;font-size:16px}
+
+/* cartas */
+.card{position:relative;width:var(--cw);height:var(--ch);border-radius:calc(var(--ch)*.05);overflow:hidden;background:#151210;border:1px solid #4a4034;flex:none;cursor:pointer;transition:transform .15s}
+.card.wide{width:calc(var(--ch)*1.4)}
+.card{container-type:size}
+@container (max-height:130px){.face .tx,.face .tr{display:none}.face .ty{margin-bottom:2px}}
+.card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.face{position:absolute;inset:0;padding:6% 7%;display:flex;flex-direction:column;gap:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--sc) 55%,#1a1612) 0 22%,#ece2cf 22%);color:#20180f;font-size:clamp(7px,calc(var(--ch)*.052),12px);line-height:1.25}
+.face .nm{font:700 1.25em/1.1 Cinzel,serif;color:#fff;text-shadow:0 1px 2px #000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.face .ty{color:#f1e7d4;font-size:.85em;font-style:normal;opacity:.9;margin-bottom:6%}
+.face .st{display:flex;flex-wrap:wrap;gap:3px}.face .st span{background:#2a2119;color:#f6eddc;border-radius:4px;padding:0 4px;font-weight:700}
+.face .st small{font-size:.75em;opacity:.7;margin-right:2px;font-weight:500}
+.face .tr{font-weight:600;font-style:italic}.face .tx{margin:0;overflow:hidden;flex:1}.face .sh{color:#6b2018;font-style:italic}
+.card.hl{box-shadow:0 0 0 3px var(--gold),0 0 18px #d9b65f88}
+.card.sel{box-shadow:0 0 0 4px var(--blu),0 0 18px #3a90cc99;transform:translateY(-4px)}
+.slot{position:relative;flex:none;padding-top:calc(var(--n)*14px);display:flex;align-items:flex-end}
+.slot.exh{width:var(--ch);justify-content:center}.slot.exh>.card{transform:rotate(90deg) scale(.86)}
+.slot.exh.wide{width:calc(var(--ch)*1.4)}
+.att{position:absolute;left:calc(var(--i)*8px);top:calc(var(--i)*14px);width:var(--cw);height:calc(var(--ch)*.5);border-radius:6px;overflow:hidden;background:#3a3227;border:1px solid #6b5c47;font-size:10px;padding:2px 5px;cursor:pointer}
+.att b{position:relative;z-index:1;text-shadow:0 1px 2px #000}.att img{position:absolute;inset:0;width:100%;height:auto}
+.att .ax{position:absolute;right:3px;top:2px;z-index:2;font-size:9px;color:var(--gold)}
+.shd{width:calc(var(--cw)*.55);height:calc(var(--ch)*.55);border-radius:6px;overflow:hidden;margin-left:-10px;align-self:flex-start;position:relative;border:1px solid #6d2a22;background:#3a1714;font-size:9px;padding:3px;cursor:pointer}
+.shd img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.back{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle,#c9561f,#5a120c 70%);color:#fff0d0;font:700 12px Cinzel,serif}
+.back.player{background:radial-gradient(circle,#c9a227,#3b2a0a 70%)}.back img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bd{position:absolute;z-index:3;font-style:normal;font-weight:700;font-size:clamp(10px,calc(var(--ch)*.085),15px);border-radius:999px;padding:1px 8px;line-height:1.5;box-shadow:0 1px 3px #000a}
+.res{top:4px;right:4px;background:#2a2112;color:var(--gold);border:1px solid var(--gold)}
+.dmg{bottom:4px;left:4px;background:var(--red);color:#fff}
+.prg{bottom:4px;right:4px;background:var(--grn);color:#fff}
+.com{top:4px;left:4px;background:var(--blu);color:#fff;font-size:10px}
+.thr{top:4px;right:4px;background:#5a1c18;color:#ffd9d2;border:1px solid #b8392f}
+.sts{bottom:4px;right:4px;background:#000c;color:#fff;font-size:10px}
+.atk{bottom:4px;right:4px;background:#5a1c18;color:#fff;font-size:10px}
+.note{top:4px;left:4px;background:var(--gold);color:#1b1408;font-size:10px}
+.cnt{top:6px;right:6px;background:#000c;color:#fff}
+.prgq{right:10px;bottom:10px;background:var(--grn);color:#fff}
+.thrT{right:10px;top:10px;background:#5a1c18;color:#ffd9d2;border:1px solid var(--red);font-size:16px}
+
+/* mesa */
+#app.is-board{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+.board{flex:1;display:flex;flex-direction:column;gap:6px;padding:6px max(8px,env(safe-area-inset-left)) 0 max(8px,env(safe-area-inset-left));padding-top:max(6px,env(safe-area-inset-top));min-height:0}
+.brow{flex:1;display:flex;gap:6px;min-height:0}
+.zone{position:relative;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#1a1612,#120f0c);padding:16px 8px 6px;display:flex;min-width:0}
+.zone>label{position:absolute;top:-1px;left:10px;font:600 10px/1 Figtree;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);background:#1a1612;border:1px solid var(--line);border-top:0;padding:3px 7px;border-radius:0 0 6px 6px}
+.zone.grow{flex:1}.z-loc{min-width:calc(var(--cw) + 18px)}
+.zone>label{max-width:calc(100% - 14px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row{display:flex;gap:8px;align-items:flex-end;overflow-x:auto;overflow-y:hidden;min-width:0;padding-bottom:2px;scrollbar-width:thin}
+.row.wrap{flex-wrap:wrap;overflow:visible;align-items:flex-start}
+.pile{position:relative;width:var(--cw);height:var(--ch);border-radius:8px;overflow:hidden;cursor:pointer}
+.pile .slot{padding:0}.pile .empty{width:100%;height:100%;border:1px dashed var(--line);border-radius:8px}
+.z-pile{flex:none}
+.hand{position:fixed;left:8px;right:8px;bottom:58px;z-index:20;background:#16120fee;border:1px solid var(--gold);border-radius:14px;padding:18px 10px 10px;backdrop-filter:blur(6px)}
+.hand>label{position:absolute;top:-1px;left:12px;font:600 10px Figtree;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.log{position:fixed;left:8px;top:8px;bottom:62px;width:min(380px,70vw);z-index:25;overflow-y:auto;background:#120f0cf2;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
+.log p{margin:0 0 6px;color:var(--mut)}.log .phase{color:var(--gold);font-weight:600;margin-top:10px}.log .bad{color:#f0a196}.log .good{color:#9fd8a5}.log .enc{color:#f3c9a0}.log .play{color:var(--ink)}
+.bar{display:flex;align-items:center;gap:8px;padding:6px max(8px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));min-height:56px}
+.bar .thr{position:static;display:flex;align-items:baseline;gap:5px;font:700 22px Cinzel,serif;color:#ffd9d2;background:#3a1512;border:1px solid var(--red);border-radius:10px;padding:2px 10px;box-shadow:none}
+.bar .thr small{font:500 11px Figtree;color:#e8b0a6}
+.ph{font-weight:600;white-space:nowrap}
+.wt{flex:1;color:var(--mut);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.hb{margin-left:auto;padding:0 12px}.wt+.gold+.hb{margin-left:0}
+.modal{position:fixed;inset:0;z-index:40;background:#000a;display:grid;place-items:center;padding:12px}
+.box{display:flex;flex-direction:column;background:var(--pan);border:1px solid #4a4034;border-radius:16px;padding:16px 18px;width:min(900px,100%);max-height:calc(100dvh - 24px);overflow:auto;box-shadow:0 20px 60px #000}
+.box h3{margin:0;font:700 clamp(17px,2.4vw,22px)/1.2 Figtree}.box p{margin:8px 0}
+.ph2{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px}
+.pbody{flex:1 1 auto;min-height:0;overflow:auto;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.big{--ch:min(300px,46dvh);--cw:calc(var(--ch)*.716)}.big.sm{--ch:min(200px,30dvh)}
+.picks{min-height:0}
+.picks{--ch:min(170px,32dvh);--cw:calc(var(--ch)*.716);gap:12px;flex:1}
+.pk{display:grid;gap:4px;justify-items:center}.pk small{color:var(--mut);font-size:13px}
+.ztext{flex:1 1 260px;font-size:15px}.ztext i{color:var(--mut);font-style:normal;display:block}.zn{font:700 20px Cinzel,serif}
+.ztext .sh{color:#e9a99f;font-style:italic}.cur{color:var(--gold)}
+.btns{flex:none;display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}.btns .muted{margin-right:auto}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px}
+.fld label{display:block;color:var(--mut);font-weight:600;margin-bottom:6px}
+.seg{display:flex;gap:4px;background:#2b2520;border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{flex:1;border:0;background:none;padding:10px;border-radius:9px;min-height:44px}.seg button.on{background:#14110e;font-weight:700}.seg button:disabled{color:#665e54;cursor:default}
+.dpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:10px}
+.dp{display:grid;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#14110e;min-height:56px}
+.dp small{color:var(--mut)}.dp.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.dp:disabled{opacity:.35;cursor:default}
+.end{text-align:center;max-width:460px}.end h3{font:700 40px Cinzel,serif}.end.win h3{color:var(--gold)}.end.lose h3{color:#f0a196}.end .btns{justify-content:center}
+pre{white-space:pre-wrap;font-size:12px;color:var(--mut)}
+.rotate{display:none}
+@media (orientation:portrait) and (max-width:820px){
+  .is-board .rotate{display:flex;position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--mut);gap:10px}
+  .is-board .rotate b{color:var(--ink);font-size:20px}}
+@media (max-height:500px){.board{gap:4px}.zone{padding:14px 6px 4px}.bar{min-height:48px}.ph{font-size:14px}.wt{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const CARDS={"51223bd0-ffd1-11df-a976-0801200c9030":{"name":"Horseback Archer","img":"51223bd0-ffd1-11df-a976-0801200c9030.jpg","type":"Ally","sphere":"Tactics","traits":["Rohan","Archer"],"kw":"Ranged.","cost":3,"a":2,"d":1,"hp":2,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9034":{"name":"Feint","img":"51223bd0-ffd1-11df-a976-0801200c9034.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Combat Action: Choose an enemy engaged with a player. That enemy cannot attack that player this phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9050":{"name":"A Test of Will","img":"51223bd0-ffd1-11df-a976-0801200c9050.jpg","type":"Event","sphere":"Spirit","cost":1,"text":"Response: Cancel the \"when revealed\" effects of a card that was just revealed from the encounter deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9073":{"name":"Gandalf","img":"51223bd0-ffd1-11df-a976-0801200c9073.jpg","type":"Ally","sphere":"Neutral","traits":["Istari"],"unique":true,"cost":5,"w":4,"a":4,"d":4,"hp":4,"text":"At the end of the round, discard Gandalf from play.   Response: After Gandalf enters play, (choose 1): draw 3 cards, deal 4 damage to 1 enemy in play, or reduce your threat by 5.","back":"player"},"0b179f39-f202-4fe7-b930-0f3db582bc3e":{"name":"The Red Arrow","img":"0b179f39-f202-4fe7-b930-0f3db582bc3e.jpg","type":"Attachment","sphere":"Tactics","traits":["Artifact","Item"],"unique":true,"cost":1,"vp":1,"text":"Limit 1 per deck. Attach to a Gondor hero. Attached hero gets +1 [willpower]. Valour Response: After attached hero quests successfully, add The Red Arrow to the victory display to search the top 5 cards of your deck for an ally and put it into play. ","back":"player"},"068e0590-6bb4-429e-8a2b-2ef0869c7c4f":{"name":"Hirgon","img":"068e0590-6bb4-429e-8a2b-2ef0869c7c4f.jpg","type":"Hero","sphere":"Tactics","traits":["Gondor","Scout"],"unique":true,"cost":9,"w":2,"a":2,"d":1,"hp":4,"text":"Response: After Hirgon quests successfully, play a [tactics] ally from your hand and reduce the cost to play it by 1 (to a minimum of 1). Then, you may raise your threat by 1 to give that ally +1 [attack] and +1 [defense] until the end of the round.","back":"player"},"e73ef9d3-e2a1-400b-9ed7-bfdfd0a3bc2a":{"name":"Wait no Longer","img":"e73ef9d3-e2a1-400b-9ed7-bfdfd0a3bc2a.jpg","type":"Event","sphere":"Tactics","cost":2,"text":"Response: At the beginning of the staging step, search the top 5 cards of the encounter deck for an enemy and put it into play engaged with you. Then, reveal 1 less encounter card this phase (to a minimum of 0). Shuffle the encounter deck. ","back":"player"},"0916b82a-068e-4ca3-9554-f589a58e82fe":{"name":"Riddermark Knight","img":"0916b82a-068e-4ca3-9554-f589a58e82fe.jpg","type":"Ally","sphere":"Tactics","traits":["Rohan","Warrior"],"cost":2,"a":2,"hp":2,"text":"Response: After Riddermark Knight is declared as an attacker, it gets +2 [attack] for this attack. At the end of this attack, discard Riddermark Knight.","back":"player"},"ae807a4c-d656-42a1-bf2c-024eaffc9fc6":{"name":"Oath of Eorl","img":"ae807a4c-d656-42a1-bf2c-024eaffc9fc6.jpg","type":"Event","sphere":"Tactics","cost":3,"text":"Play only if you control a unique character with the Rohan trait and another unique character with the Gondor trait. Response: At the beginning of the combat phase, you resolve the step in which you attack enemies before resolving enemy attacks this phase. (Each other player resolves the combat phase as normal after you resolve your attacks.)","back":"player"},"4cca8984-2e4e-4df2-ac96-86af18b2a961":{"name":"Lothíriel","img":"4cca8984-2e4e-4df2-ac96-86af18b2a961.jpg","type":"Hero","sphere":"Spirit","traits":["Gondor","Noble"],"unique":true,"cost":8,"w":3,"a":1,"d":1,"hp":3,"text":"If Éomer is in play, Lothiriel gains the Rohan trait. Response: After Lothiriel commits to a quest, choose an ally in your hand. If that ally shares a Trait with her, put that ally into play exhausted and committed to the quest. At the end of the phase, if that ally is still in play, shuffle it into your deck.","back":"player"},"6f02e0de-b54d-4c13-97b8-2f3a53b3aa77":{"name":"War Axe","img":"6f02e0de-b54d-4c13-97b8-2f3a53b3aa77.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Weapon"],"kw":"Restricted.","cost":1,"text":"Attach to a [tactics] character. Limit 1 per character. Restricted. Attached characters gets +1 [attack] for each attachment it has with the restricted keyword.","back":"player"},"52a0f137-da57-4c41-b455-9671aecd5298":{"name":"Horn of the Mark","img":"52a0f137-da57-4c41-b455-9671aecd5298.jpg","type":"Attachment","sphere":"Spirit","traits":["Artifact","Item"],"kw":"Restricted.","unique":true,"cost":1,"text":"Attach to a Rohan hero or Merry. Restricted.Response: When a character leaves play, if that character shares at least one trait with the attached hero, exhaust Horn of the Mark to draw 1 card.","back":"player"},"8047c8c2-1569-428c-865e-0459c2733db3":{"name":"The Muster of Rohan","img":"8047c8c2-1569-428c-865e-0459c2733db3.jpg","type":"Event","sphere":"Spirit","cost":4,"text":"While paying for The Muster of Rohan, each Rohan hero you control is considered to have a [spirit] icon. Planning Action: Search the top 10 cards of your deck for up to 4 Rohan allies and put them into play. Shuffle your deck. If any of those allies are still in play at the end of the round, discard them.","back":"player"},"38420e0c-f73c-4df4-8161-c189fecb9114":{"name":"Westfold Lancer","img":"38420e0c-f73c-4df4-8161-c189fecb9114.jpg","type":"Ally","sphere":"Tactics","traits":["Rohan","Warrior"],"cost":3,"w":2,"a":2,"hp":2,"text":"Response: After Westfold Lancer quests successfully, discard it to choose a non-unique enemy in the staging area. Deal 2 damage to the chosen enemy.","back":"player"},"51223bd0-ffd1-11df-a976-0801201c9009":{"name":"Westfold Horse-Breaker","img":"51223bd0-ffd1-11df-a976-0801201c9009.jpg","type":"Ally","sphere":"Spirit","traits":["Rohan"],"cost":2,"w":1,"d":1,"hp":1,"text":"Action: Discard Westfold Horse-Breaker to choose and ready a hero.","back":"player"},"51223bd0-ffd1-11df-a976-0801203c9009":{"name":"Escort from Edoras","img":"51223bd0-ffd1-11df-a976-0801203c9009.jpg","type":"Ally","sphere":"Spirit","traits":["Rohan"],"cost":2,"w":2,"hp":1,"text":"While committed to a quest, Escort from Edoras gets +2 [willpower].  Forced: After resolving a quest to which Escort from Edoras was committed, discard Escort from Edoras from play.","back":"player"},"51223bd0-ffd1-11df-a976-0801202c9009":{"name":"Éomund","img":"51223bd0-ffd1-11df-a976-0801202c9009.jpg","type":"Ally","sphere":"Spirit","traits":["Rohan"],"unique":true,"cost":3,"w":2,"a":1,"d":1,"hp":2,"text":"Response: After Éomund leaves play, ready all Rohan characters in play.","back":"player"},"51223bd0-ffd1-11df-a976-0801203c9005":{"name":"Ancient Mathom","img":"51223bd0-ffd1-11df-a976-0801203c9005.jpg","type":"Attachment","sphere":"Spirit","traits":["Mathom"],"kw":"Attach to a location.","cost":1,"text":"Response: After attached location is explored, the first player draws 3 cards.","back":"player"},"51223bd0-ffd1-11df-a976-0801206c9003":{"name":"Astonishing Speed","img":"51223bd0-ffd1-11df-a976-0801206c9003.jpg","type":"Event","sphere":"Spirit","cost":3,"text":"Action: Until the end of the phase, all Rohan characters get +2 [willpower].","back":"player"},"06baca74-330a-4038-9387-32ce8657dd8f":{"name":"Guthlaf","img":"06baca74-330a-4038-9387-32ce8657dd8f.jpg","type":"Ally","sphere":"Tactics","traits":["Rohan"],"unique":true,"cost":3,"w":1,"a":1,"d":2,"hp":2,"text":"If there is at least 1 Rohan hero in play, lower the cost to play Guthlaf by 1. If there is at least 1 Gondor hero in play, Guthlaf gains sentinel.","back":"player"},"51223bd0-ffd1-11df-a976-0801206c9026":{"name":"West Road Traveller","img":"51223bd0-ffd1-11df-a976-0801206c9026.jpg","type":"Ally","sphere":"Spirit","traits":["Rohan"],"cost":2,"w":2,"hp":1,"text":"Response: After you play West Road Traveller from your hand, switch the active location with any other location in the staging area.","back":"player"},"80cdd2b5-60cf-4d47-afe7-505b79abcb1b":{"name":"Forth Eorlingas!","img":"80cdd2b5-60cf-4d47-afe7-505b79abcb1b.jpg","type":"Event","sphere":"Tactics","cost":2,"text":"Combat Action: Each Rohan hero can be declared as an attacker against enemies in the staging area this phase.","back":"player"},"21cfb9e9-6777-4bc6-ace6-08fe68e949a4":{"name":"Éomer","img":"21cfb9e9-6777-4bc6-ace6-08fe68e949a4.jpg","type":"Hero","sphere":"Tactics","traits":["Rohan","Noble","Warrior"],"unique":true,"cost":10,"w":1,"a":3,"d":2,"hp":4,"text":"Response: After a character leaves play, Éomer gets +2 [attack] attack until the end of the round. (Limit once per round.)","back":"player"},"93a364f6-2a0f-4872-9770-aa7a1bd30d3d":{"name":"Westfold Outrider","img":"93a364f6-2a0f-4872-9770-aa7a1bd30d3d.jpg","type":"Ally","sphere":"Tactics","traits":["Rohan","Scout"],"cost":2,"a":2,"d":1,"hp":2,"text":"Action: Discard Westfold Outrider to choose an enemy not engaged with you. Engage the chosen enemy.","back":"player"},"0567c2df-677c-4529-985a-54621088fe58":{"name":"Westfold Horse-breeder","img":"0567c2df-677c-4529-985a-54621088fe58.jpg","type":"Ally","sphere":"Spirit","traits":["Rohan"],"cost":1,"w":1,"hp":1,"text":"Response: After Westfold Horse-breeder enters play, search the top 10 cards of your deck for a Mount attachment and add it to your hand. Shuffle your deck.","back":"player"},"0ee1f1e6-1952-4bad-8ecd-631e80f4ccc0":{"name":"Firefoot","img":"0ee1f1e6-1952-4bad-8ecd-631e80f4ccc0.jpg","type":"Attachment","sphere":"Tactics","traits":["Mount"],"unique":true,"cost":2,"text":"Attach to a [tactics] or Rohan hero. Restricted.       Attached hero gets +1 [attack] (+2 [attack] instead if attached hero is Éomer).       Response: After attached hero attacks alone, exhaust Firefoot to choose a non-unique enemy engaged with you. Excess damage dealt by this attack is assigned to the chosen enemy","back":"player"},"d87344c3-d234-44c8-89b1-249f5c88bfab":{"name":"Fastred","img":"d87344c3-d234-44c8-89b1-249f5c88bfab.jpg","type":"Hero","sphere":"Spirit","traits":["Rohan","Warrior"],"cost":9,"w":1,"a":2,"d":3,"hp":3,"text":"Response: After Fastred defends an enemy attack, return that enemy to the staging area to reduce your threat by 2. (Limit once per phase.)","back":"player"},"66d8e628-8ca8-4605-9017-aece027f054f":{"name":"Spear of the Mark","img":"66d8e628-8ca8-4605-9017-aece027f054f.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Weapon"],"kw":"Attach to a Rohan character. Restricted.","cost":1,"text":"Attached character gets +1 [attack]. (+2 [attack] instead if attacking an enemy in the staging area.)","back":"player"},"51223bd0-ffd1-11df-a976-0801204c9023":{"name":"The Riddermark's Finest","img":"51223bd0-ffd1-11df-a976-0801204c9023.jpg","type":"Ally","sphere":"Spirit","traits":["Creature","Rohan"],"cost":2,"w":1,"a":1,"hp":2,"text":"Action: Exhaust and discard The Riddermark's Finest to place 2 progress tokens on any location.","back":"player"},"90d300da-a557-44b1-a634-d54782ff5e48":{"name":"Steed of the Mark","img":"90d300da-a557-44b1-a634-d54782ff5e48.jpg","type":"Attachment","sphere":"Spirit","traits":["Mount"],"kw":"Attach to a Gondor or Rohan character.","cost":1,"text":"Response: After attached hero commits to a quest, spend 1 resource from attached hero's resource pool to ready attached hero.","back":"player"},"6f8508d7-bb11-4d5c-a077-80a35e00105e":{"name":"Rohan Warhorse","img":"6f8508d7-bb11-4d5c-a077-80a35e00105e.jpg","type":"Attachment","sphere":"Tactics","traits":["Mount"],"kw":"Attach to a [tactics] or Rohan hero. Restricted.","cost":1,"text":"Response: After attached hero participates in an attack that destroys an enemy, exhaust Rohan Warhorse to ready attached hero.","back":"player"},"4fb48ed9-1651-4ae7-83d1-9d76a1dc27e7":{"name":"Charge of the Rohirrim","img":"4fb48ed9-1651-4ae7-83d1-9d76a1dc27e7.jpg","type":"Event","sphere":"Tactics","cost":2,"text":"Action: Until the end of the phase, each Rohan character with a Mount attachment gets +3 [attack].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9029":{"name":"Gondorian Spearman","img":"51223bd0-ffd1-11df-a976-0801200c9029.jpg","type":"Ally","sphere":"Tactics","traits":["Gondor","Warrior"],"kw":"Sentinel.","cost":2,"a":1,"d":1,"hp":1,"text":"Response: After Gondorian Spearman is declared as a defender, deal 1 damage to the attacking enemy.","back":"player"},"5177774a-29a0-4ce7-890c-aae2fe01e611":{"name":"Soldier of Gondor","img":"5177774a-29a0-4ce7-890c-aae2fe01e611.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor"],"cost":2,"w":1,"a":1,"d":1,"hp":2,"text":"Response: After Soldier of Gondor enters play, seach the top 5 cards of your deck for a Gondor ally and add it to your hand (any number of Gondor allies instead if your threat is 40 or higher). Shuffle your deck.","back":"player"},"47deb269-e02b-426d-b64a-34a4adff44de":{"name":"Valiant Sword","img":"47deb269-e02b-426d-b64a-34a4adff44de.jpg","type":"Attachment","sphere":"Leadership","traits":["Item","Weapon"],"kw":"Restricted.","cost":1,"text":"Attach to a Noble hero. Limit 1 per hero.Restricted.Attached hero gets +1 [attack] (+2 [attack] if your threat is 40 or higher).","back":"player"},"28877bba-27de-4b19-a8ab-5d557b634172":{"name":"Pillars of the Kings","img":"28877bba-27de-4b19-a8ab-5d557b634172.jpg","type":"Event","sphere":"Leadership","cost":4,"text":"While your threat is less than 40, reduce the cost to play Pillars of the Kings by 4.Action: Set your threat to 40. If this effect raised your threat, draw a card (draw 4 cards instead if it raised your threat by 10 or more).","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9024":{"name":"Valiant Sacrifice","img":"51223bd0-ffd1-11df-a976-0801200c9024.jpg","type":"Event","sphere":"Leadership","cost":1,"text":"Response: After an ally card leaves play, that card's controller draws 2 cards.","back":"player"},"3dc9ec01-71b6-48fd-8fe4-0c8fa2161fe3":{"name":"Need Drives Them","img":"3dc9ec01-71b6-48fd-8fe4-0c8fa2161fe3.jpg","type":"Event","sphere":"Leadership","cost":3,"text":"Action: Each player whose threat is 40 or higher readies all characters he controls.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9033":{"name":"Foe-hammer","img":"51223bd0-ffd1-11df-a976-1801204c9033.jpg","type":"Event","sphere":"Tactics","text":"Response: After a hero you control attacks and destroys an enemy, exhaust a Weapon card attached to that hero to draw 3 cards.","back":"player"},"0c65af6a-7038-476b-9318-a024cc94c8b6":{"name":"Angbor the Fearless","img":"0c65af6a-7038-476b-9318-a024cc94c8b6.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor","Warrior"],"unique":true,"cost":2,"w":2,"a":1,"hp":2,"text":"While your threat is 40 or higher, Angbor the Fearless gets +2 [attack] and does not exhaust to quest.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9014":{"name":"Faramir","img":"51223bd0-ffd1-11df-a976-0801200c9014.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor","Noble","Ranger"],"unique":true,"cost":4,"w":2,"a":1,"d":2,"hp":3,"text":"Action: Exhaust Faramir to choose a player. Each character controlled by that player gets +1 [willpower] until the end of the phase.","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9008":{"name":"Boromir","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9008.jpg","type":"Hero","sphere":"Leadership","traits":["Gondor","Warrior","Noble"],"unique":true,"cost":11,"w":1,"a":3,"d":2,"hp":5,"text":"While Boromir has at least 1 resource in his resource pool, Gondor allies get +1 [attack].","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9010":{"name":"Citadel Custodian","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9010.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor"],"cost":5,"w":1,"d":1,"hp":3,"text":"Lower the cost to play Citadel Custodian by 1 for each Gondor ally in play.","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9014":{"name":"Defender of Rammas","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9014.jpg","type":"Ally","sphere":"Tactics","traits":["Gondor","Warrior"],"cost":2,"a":1,"d":4,"hp":1,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9026":{"name":"Steward of Gondor","img":"51223bd0-ffd1-11df-a976-0801200c9026.jpg","type":"Attachment","sphere":"Leadership","traits":["Gondor","Title"],"kw":"Attach to a hero.","unique":true,"cost":2,"text":"Attached hero gains the Gondor trait.  Action: Exhaust Steward of Gondor to add 2 resources to attached hero's resource pool.","back":"player"},"09134509-191b-4903-b4b5-5e650f8143c1":{"name":"Gondorian Shield","img":"09134509-191b-4903-b4b5-5e650f8143c1.jpg","type":"Attachment","sphere":"Tactics","traits":["Armor","Item"],"kw":"Attach to a hero. Restricted. Limit 1 per hero.","cost":1,"text":"Attached hero gains +1 [defense]. (+2 [defense] instead if attached hero has the Gondor trait.)","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9004":{"name":"Behind Strong Walls","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9004.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Action: Ready a defending Gondor character. That character gets +1 [defense] until the end of the phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801203c9001":{"name":"Prince Imrahil","img":"51223bd0-ffd1-11df-a976-0801203c9001.jpg","type":"Hero","sphere":"Leadership","traits":["Gondor","Noble"],"unique":true,"cost":11,"w":2,"a":3,"d":2,"hp":4,"text":"Response: After a character leaves play, ready Prince Imrahil. (Limit once per round.)","back":"player"},"9e3a4b3b-7bb7-4403-984c-411af5ec8467":{"name":"Mablung","img":"9e3a4b3b-7bb7-4403-984c-411af5ec8467.jpg","type":"Hero","sphere":"Tactics","traits":["Gondor","Ranger"],"unique":true,"cost":10,"w":2,"a":2,"d":2,"hp":4,"text":"Response: After you engage an enemy, add 1 resource to Mablung's resource pool. (Limit once per phase.)","back":"player"},"83842580-bfe9-4d56-addf-e1d290eb7bcf":{"name":"Heir of Mardil","img":"83842580-bfe9-4d56-addf-e1d290eb7bcf.jpg","type":"Attachment","sphere":"Leadership","traits":["Title"],"kw":"Attach to a Noble hero.","unique":true,"cost":1,"text":"Response: After attached hero gains any number of resources from a card effect, exhaust Heir of Mardil to ready attached hero.","back":"player"},"2002b5d3-57b1-429a-a19a-2d10a564bc31":{"name":"Coney in a Trap","img":"2002b5d3-57b1-429a-a19a-2d10a564bc31.jpg","type":"Event","sphere":"Lore","cost":1,"text":"Play only if you control a unique character with the Ranger trait and another unique character with the Warrior trait. Response: After you engage an enemy, that enemy cannot attack you until the end of the round.","back":"player"},"29b76593-0ef3-410b-aa85-1c282d4b1582":{"name":"Captain of Gondor","img":"29b76593-0ef3-410b-aa85-1c282d4b1582.jpg","type":"Attachment","sphere":"Tactics","traits":["Title"],"kw":"Attach to a Warrior hero.","unique":true,"cost":1,"text":"Response: After you optionally engage an enemy, exhaust Capatain of Gondor to give attached hero +1 [attack] and +1 [defense] until the end of the round.","back":"player"},"1f28f098-09d4-43fa-8fba-eae551a5d4fe":{"name":"Pelargir Ship Captain","img":"1f28f098-09d4-43fa-8fba-eae551a5d4fe.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor"],"cost":2,"w":1,"a":1,"hp":2,"text":"Response: After Pelargir Ship Captain enters play, move 1 resource from the resource pool of a hero you control to another hero's resource pool.","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9016":{"name":"Errand-rider","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9016.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor"],"cost":1,"hp":2,"text":"Action: Exhaust Errand-rider to move 1 resource from the resource pool of a hero you control to another hero's resource pool.","back":"player"},"887ff756-3e65-47d0-b056-12194727a83b":{"name":"Helm of Secrecy","img":"887ff756-3e65-47d0-b056-12194727a83b.jpg","type":"Event","sphere":"Neutral","cost":4,"text":"Limit 1 per deck.Action: Choose a hero you control and discard all tokens from it. Select a different non-a~o, non-A hero from your collection with a threat cost less than or equal to the chosen hero. Swap those heroes, moving all eligible attachments and damage tokens to the hero from your collection.","back":"player"},"67b8089a-af30-46eb-b581-5def4da14149":{"name":"Emyn Arnen Ranger","img":"67b8089a-af30-46eb-b581-5def4da14149.jpg","type":"Ally","sphere":"Lore","traits":["Gondor","Ranger"],"cost":2,"a":1,"d":1,"hp":2,"text":"Response: After Emyn Arnen Ranger commits to quest, choose an enemy with a Trap attachment. Until the end of the phase, Emyn Arnen Ranger gets +X [willpower], where X is the chosen enemy's printed [threat].","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9015":{"name":"Envoy of Pelargir","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9015.jpg","type":"Ally","sphere":"Neutral","traits":["Gondor"],"cost":2,"w":1,"a":1,"hp":1,"text":"Response: After Envoy of Pelargir enters play, add 1 resource to a Gondor or Noble hero's resource pool.","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9005":{"name":"Beregond","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9005.jpg","type":"Hero","sphere":"Tactics","traits":["Gondor","Warrior"],"kw":"Sentinel.","unique":true,"cost":10,"a":1,"d":4,"hp":4,"text":"Lower the cost to play Weapon and Armor attachments on Beregond by 2.","back":"player"},"d4f034b0-2444-4b61-a249-8d86e8856f7c":{"name":"Squire of the Citadel","img":"d4f034b0-2444-4b61-a249-8d86e8856f7c.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor"],"cost":1,"d":1,"hp":1,"text":"Response: After Squire of the Citadel leaves play, add 1 resource to a Gondor hero's resource pool.","back":"player"},"51223bd0-ffd1-11df-a976-0801212c9028":{"name":"Path of Need","img":"51223bd0-ffd1-11df-a976-0801212c9028.jpg","type":"Attachment","sphere":"Leadership","traits":["Condition"],"kw":"Limit 1 per deck. Attach to a location.","cost":4,"text":"Heroes do not exhaust to attack, defend, or commit to a quest while attached location is the active location.","back":"player"},"4823aae3-46ef-4a75-89f9-cbd3aa1b9071":{"name":"Ranger Spikes","img":"4823aae3-46ef-4a75-89f9-cbd3aa1b9071.jpg","type":"Attachment","sphere":"Lore","traits":["Trap"],"cost":2,"text":"Play Ranger Spikes into the staging area unattached.  If unattached, attach Ranger Spikes to the next eligible enemy that enters the staging area.  Players do not make engagement checks against attached enemy. Attached enemy gets -2 [threat].","back":"player"},"fd89bdbf-7475-4f3e-96fc-8f5315a90029":{"name":"Ithilien Pit","img":"fd89bdbf-7475-4f3e-96fc-8f5315a90029.jpg","type":"Attachment","sphere":"Lore","traits":["Trap"],"cost":1,"text":"Play Ithilien Pit into the staging area unattached.  If unattached, attach Ithilien Pit to the next eligible enemy that enters the staging area.  Any character may choose attached enemy as the target of an attack.","back":"player"},"2f0a3f18-c84f-4458-b6f7-2e6be9acee6b":{"name":"Visionary Leadership","img":"2f0a3f18-c84f-4458-b6f7-2e6be9acee6b.jpg","type":"Attachment","sphere":"Leadership","traits":["Skill"],"kw":"Attach to a Gondor hero.","unique":true,"cost":2,"text":"While attached hero has at least 1 resource in its resource pool, Gondor characters get +1 [willpower].","back":"player"},"323ebfa3-57e5-4394-9f55-284b2f7ee0be":{"name":"Faramir","img":"323ebfa3-57e5-4394-9f55-284b2f7ee0be.jpg","type":"Hero","sphere":"Lore","traits":["Gondor","Ranger","Noble"],"kw":"Ranged.","unique":true,"cost":11,"w":2,"a":2,"d":2,"hp":5,"text":"Faramir gets +1 [attack] for each enemy in the staging area.","back":"player"},"d30fd38a-65fe-464d-acac-47d0f02deb05":{"name":"Greenwood Archer","img":"d30fd38a-65fe-464d-acac-47d0f02deb05.jpg","type":"Ally","sphere":"Leadership","traits":["Silvan"],"kw":"Ranged.","cost":2,"a":2,"hp":1,"text":"Response: After Greenwood Archer enters play, ready a hero.","back":"player"},"70c370e2-ae8e-4dff-bf38-619e9c6d0ce7":{"name":"Host of Galadhrim","img":"70c370e2-ae8e-4dff-bf38-619e9c6d0ce7.jpg","type":"Event","sphere":"Neutral","cost":4,"text":"Planning Action: Return each Silvan ally you control to your hand. Then, play each of those allies from your hand one at a time at no cost.","back":"player"},"51223bd0-ffd1-11df-a976-0801205c9014":{"name":"Silvan Tracker","img":"51223bd0-ffd1-11df-a976-0801205c9014.jpg","type":"Ally","sphere":"Lore","traits":["Silvan"],"cost":3,"w":1,"a":1,"d":1,"hp":3,"text":"Response: After a Silvan character readies during the refresh phase, heal 1 damage from that character.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9060":{"name":"Henamarth Riversong","img":"51223bd0-ffd1-11df-a976-0801200c9060.jpg","type":"Ally","sphere":"Lore","traits":["Silvan"],"unique":true,"cost":1,"w":1,"a":1,"hp":1,"text":"Action: Exhaust Henamarth Riversong to look at the top card of the encounter deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801206c9016":{"name":"Mirkwood Runner","img":"51223bd0-ffd1-11df-a976-0801206c9016.jpg","type":"Ally","sphere":"Lore","traits":["Silvan","Scout"],"cost":3,"w":1,"a":2,"hp":2,"text":"While Mirkwood Runner is attacking alone, the defending enemy does not count its [defense].","back":"player"},"51223bd0-ffd1-11df-a976-0801210c9005":{"name":"Elrond's Counsel","img":"51223bd0-ffd1-11df-a976-0801210c9005.jpg","type":"Event","sphere":"Spirit","text":"Action: If you control a unique Noldor character, give another character +1 [willpower] until the end of the phase and lower your threat by 3.","back":"player"},"e4fd6e25-982a-464f-82d8-812269864d46":{"name":"Silvan Refugee","img":"e4fd6e25-982a-464f-82d8-812269864d46.jpg","type":"Ally","sphere":"Spirit","traits":["Silvan"],"cost":1,"w":2,"hp":1,"text":"Forced: After a character leaves play, discard Silvan Refugee from play.","back":"player"},"4c4cccd3-576a-41f1-8b6c-ba11b4cc3d4b":{"name":"Celeborn","img":"4c4cccd3-576a-41f1-8b6c-ba11b4cc3d4b.jpg","type":"Hero","sphere":"Leadership","traits":["Silvan","Noble"],"unique":true,"cost":11,"w":3,"a":2,"d":2,"hp":4,"text":"Response: After a Silvan ally enters play, that ally gets +1 [willpower], +1 [attack], and +1 [defense] until the end of the round.","back":"player"},"f39eaad9-134d-406b-9111-e03c33e0cd16":{"name":"The Tree People","img":"f39eaad9-134d-406b-9111-e03c33e0cd16.jpg","type":"Event","sphere":"Lore","text":"Action: Return a Silvan ally you control to your hand to search the top 5 cards of your deck for a Silvan ally. Put that ally into play and shuffle the other cards back into your deck. You can only play 1 copy of The Tree People each phase.","back":"player"},"dad6e885-d535-4100-bd9f-4726ea7c7465":{"name":"Naith Guide","img":"dad6e885-d535-4100-bd9f-4726ea7c7465.jpg","type":"Ally","sphere":"Leadership","traits":["Silvan","Scout"],"cost":2,"w":1,"a":1,"hp":1,"text":"Response: After Naith Guide enters play, choose a hero. That hero does not exhaust to quest this round.","back":"player"},"9d548a43-0ef8-45e6-ab95-7356d218d203":{"name":"Haldir of Lórien","img":"9d548a43-0ef8-45e6-ab95-7356d218d203.jpg","type":"Hero","sphere":"Lore","traits":["Silvan","Ranger","Scout"],"kw":"Ranged.","unique":true,"cost":9,"w":2,"a":3,"d":1,"hp":3,"text":"Combat Action: If you have not engaged an enemy this round, exhaust Haldir of Lorien to declare him as an attacker (and resolve his attack) against an enemy not engaged with you. Limit once per round.","back":"player"},"b4d93180-0ebc-4a9b-9817-e761068570e3":{"name":"O Lórien!","img":"b4d93180-0ebc-4a9b-9817-e761068570e3.jpg","type":"Attachment","sphere":"Leadership","traits":["Song"],"kw":"Attach to a hero.","cost":1,"text":"Action: Exhaust O Lorien! To lower the cost of the next Silvan ally played this phase by 1 (to a minimum of 1).","back":"player"},"14936075-9e6a-43af-9497-dbee9df95781":{"name":"Feigned Voices","img":"14936075-9e6a-43af-9497-dbee9df95781.jpg","type":"Event","sphere":"Leadership","text":"Combat Action: Return a Silvan ally you control to your hand to choose an enemy engaged with a player. That enemy cannot attack that player this phase.","back":"player"},"bd81ff6a-9c8f-415e-85fb-da84c21ef2a4":{"name":"Galadhrim Minstrel","img":"bd81ff6a-9c8f-415e-85fb-da84c21ef2a4.jpg","type":"Ally","sphere":"Lore","traits":["Silvan","Minstrel"],"cost":2,"w":1,"hp":1,"text":"Response: After Galadhrim Minstrel enters play, search the top 5 cards of your deck for an event card and add it to your hand. Shuffle the other cards back into your deck.","back":"player"},"b91ba94d-e6b9-41f6-89ed-df1fb1f22335":{"name":"Defender of the Naith","img":"b91ba94d-e6b9-41f6-89ed-df1fb1f22335.jpg","type":"Ally","sphere":"Neutral","traits":["Silvan","Warrior"],"kw":"Sentinel.","cost":3,"a":1,"d":2,"hp":2,"text":"Response: After a Silvan ally you control leaves play, ready Defender of the Naith.","back":"player"},"17cb8a9a-6369-4ea9-a614-02908bd7b77f":{"name":"Wingfoot","img":"17cb8a9a-6369-4ea9-a614-02908bd7b77f.jpg","type":"Attachment","sphere":"Lore","traits":["Title"],"kw":"Attach to a Ranger hero.","unique":true,"cost":1,"text":"Attach to a Ranger hero. Response: After attached hero commits to a quest, name enemy, location or treachery. If a card of the named type is revealed during this quest phase, exhaust Wingfoot to ready attached hero.","back":"player"},"51223bd0-ffd1-11df-a976-0801212c9010":{"name":"Daeron's Runes","img":"51223bd0-ffd1-11df-a976-0801212c9010.jpg","type":"Event","sphere":"Lore","text":"Action: Draw 2 cards. Then, discard 1 card from your hand.","back":"player"},"ff3794e8-d8b1-48dc-a9f8-97ea7d6b3874":{"name":"Galadriel's Handmaiden","img":"ff3794e8-d8b1-48dc-a9f8-97ea7d6b3874.jpg","type":"Ally","sphere":"Spirit","traits":["Silvan"],"cost":2,"w":2,"d":1,"hp":1,"text":"Response: After Galadriel's Handmaiden enters play, choose a player. That player reduces his threat by 1.","back":"player"},"8d6a15a8-e363-46bb-8e49-0af45a1ea0d1":{"name":"Galadriel","img":"8d6a15a8-e363-46bb-8e49-0af45a1ea0d1.jpg","type":"Hero","sphere":"Spirit","traits":["Noldor","Noble"],"unique":true,"cost":9,"w":4,"hp":4,"text":"Galadriel cannot quest, attack, or defend. Allies you control do not exhaust to commit to the quest during the round they enter play.  Action: Exhaust Galadriel to choose a player. That player reduces his threat by 1 and draws 1 card. (Limit once per round.)","back":"player"},"9220dbae-e7fc-43fc-b772-043af7d4bda1":{"name":"Orophin","img":"9220dbae-e7fc-43fc-b772-043af7d4bda1.jpg","type":"Ally","sphere":"Leadership","traits":["Silvan","Scout"],"kw":"Ranged.","unique":true,"cost":3,"w":2,"a":2,"hp":2,"text":"Response: After Orophin enters play, return a Silvan ally from your discard pile to your hand.","back":"player"},"51223bd0-ffd1-11df-a976-0801213c9004":{"name":"Elrond","img":"51223bd0-ffd1-11df-a976-0801213c9004.jpg","type":"Hero","sphere":"Lore","traits":["Noldor","Noble"],"unique":true,"cost":13,"w":3,"a":2,"d":3,"hp":4,"text":"You may spend resources from Elrond's resource pool to pay for [spirit], [leadership], and [tactics] allies.  Response: After a character is healed by another card effect, heal 1 damage on it.","back":"player"},"17ed9b53-19f5-4ad1-ab91-14c2859e5a60":{"name":"Nenya","img":"17ed9b53-19f5-4ad1-ab91-14c2859e5a60.jpg","type":"Attachment","sphere":"Neutral","traits":["Artifact","Ring"],"kw":"Attach to Galadriel. She gains a [lore] resource icon.","unique":true,"cost":1,"text":"Quest Action: Exhaust Nenya and Galadriel to add her [willpower] to another character's [willpower] until the end of the phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801213c9027":{"name":"Vilya","img":"51223bd0-ffd1-11df-a976-0801213c9027.jpg","type":"Attachment","sphere":"Neutral","traits":["Ring","Artifact"],"kw":"Attach to Elrond. He gains a [spirit] resource icon.","unique":true,"cost":2,"text":"Action: Exhaust Elrond and Vilya to reveal the top card of your deck. You can immediately play or put into play the revealed card for no cost, if able. Otherwise, move the revealed card to the bottom of your deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801213c9007":{"name":"Hands Upon the Bow","img":"51223bd0-ffd1-11df-a976-0801213c9007.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Action: Exhaust a character you control with ranged to immediately declare it as an attacker (and resolve its attack) against an enemy in the staging area. It gets +1 [attack] during this attack.","back":"player"},"f86ea37a-d70d-4ff2-ac36-2a0ff1f7ffa9":{"name":"Lembas","img":"f86ea37a-d70d-4ff2-ac36-2a0ff1f7ffa9.jpg","type":"Attachment","sphere":"Lore","traits":["Item"],"kw":"Play only if you control a Noldor or Silvan hero.  Attach to a hero.","cost":1,"text":"Action: Discard Lembas to ready attached hero and heal 3 damage from it.","back":"player"},"4b794779-c6b6-4ee0-b13f-196b721e28a7":{"name":"Rúmil","img":"4b794779-c6b6-4ee0-b13f-196b721e28a7.jpg","type":"Ally","sphere":"Tactics","traits":["Silvan","Scout"],"kw":"Ranged.","unique":true,"cost":4,"w":2,"a":2,"d":1,"hp":2,"text":"Response: After you play Rumil from your hand, choose an enemy engaged with a player. Deal X damage to that enemy where X is the number of ranged characters you control.","back":"player"},"af74e00e-a04e-4a15-a538-d36539bfb751":{"name":"Pursuing the Enemy","img":"af74e00e-a04e-4a15-a538-d36539bfb751.jpg","type":"Event","sphere":"Tactics","text":"Action: Return a Silvan ally you control to your hand to choose a player. Deal 1 damage to each enemy engaged with that player.","back":"player"},"12d436ac-15e6-47c5-8288-357c918071a7":{"name":"Bow of the Galadhrim","img":"12d436ac-15e6-47c5-8288-357c918071a7.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Weapon"],"kw":"Attach to a Silvan character with the ranged keyword.  Restricted.","cost":1,"text":"Attached character gets +1 [attack]. (+2 [attack] instead if attacking an enemy not engaged with you.)","back":"player"},"39775f69-5cf4-4133-9cf4-45a1522aa9ea":{"name":"Galadhon Archer","img":"39775f69-5cf4-4133-9cf4-45a1522aa9ea.jpg","type":"Ally","sphere":"Tactics","traits":["Silvan","Warrior"],"kw":"Ranged.","cost":2,"a":2,"hp":1,"text":"Response: After Galadhon Archer enters play, deal 1 damage to an enemy not engaged with you.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9065":{"name":"Ori","img":"51223bd0-ffd1-11df-a976-1801204c9065.jpg","type":"Hero","sphere":"Lore","traits":["Dwarf"],"unique":true,"cost":8,"w":2,"a":2,"d":1,"hp":3,"text":"If you control at least 5 Dwarf characters, draw 1 additional card at the beginning of the resource phase.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9024":{"name":"Cram","img":"51223bd0-ffd1-11df-a976-1801204c9024.jpg","type":"Attachment","sphere":"Leadership","traits":["Item"],"kw":"Attach to a hero.","text":"Action: Discard Cram to ready attached hero.","back":"player"},"c2c8d69a-6639-49af-89ed-86f2ffc8c096":{"name":"Ered Luin Miner","img":"c2c8d69a-6639-49af-89ed-86f2ffc8c096.jpg","type":"Ally","sphere":"Neutral","traits":["Dwarf"],"cost":3,"w":1,"a":1,"d":1,"hp":2,"text":"Response: After Ered Luin Miner is discarded from the top of your deck, put it into play under your control.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9027":{"name":"Dori","img":"51223bd0-ffd1-11df-a976-1801204c9027.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf"],"unique":true,"cost":3,"w":1,"a":2,"d":1,"hp":3,"text":"Response: After a hero is assigned any amount of damage, exhaust Dori to place that damage on Dori instead.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9084":{"name":"Thrór's Map","img":"51223bd0-ffd1-11df-a976-1801204c9084.jpg","type":"Attachment","sphere":"Lore","traits":["Artifact","Item"],"kw":"Attach to a hero.","unique":true,"cost":1,"text":"Travel Action: Exhaust Thror's Map to choose a location in the staging area. Make that location the active location. (If there is another active location, return it to the staging area.)","back":"player"},"6778eb01-6b07-4dbe-87f1-e854ab548813":{"name":"Glóin","img":"6778eb01-6b07-4dbe-87f1-e854ab548813.jpg","type":"Ally","sphere":"Leadership","traits":["Dwarf"],"unique":true,"cost":3,"w":2,"a":1,"d":1,"hp":3,"text":"While you control at least 5 Dwarf characters, Gloin gains: \"Response: After you play Gloin from your hand, choose a hero. Add 2 resources to that hero's resource pool.\"","back":"player"},"9152834a-5355-42ba-9592-1a3c1940d1a8":{"name":"King Under the Mountain","img":"9152834a-5355-42ba-9592-1a3c1940d1a8.jpg","type":"Attachment","sphere":"Leadership","traits":["Title"],"kw":"Attach to a Dwarf hero.","unique":true,"cost":2,"text":"Action: Exhaust King Under the Mountain to look at the top 2 cards of your deck. Add 1 to your hand and discard the other.","back":"player"},"51223bd0-ffd1-11df-a976-0801206c9005":{"name":"Dáin Ironfoot","img":"51223bd0-ffd1-11df-a976-0801206c9005.jpg","type":"Hero","sphere":"Leadership","traits":["Dwarf"],"unique":true,"cost":11,"w":1,"a":2,"d":3,"hp":5,"text":"While Dáin Ironfoot is ready, Dwarf characters get +1 [attack] and +1 [willpower].","back":"player"},"51223bd0-ffd1-11df-a976-0801207c9008":{"name":"Bifur","img":"51223bd0-ffd1-11df-a976-0801207c9008.jpg","type":"Hero","sphere":"Lore","traits":["Dwarf"],"unique":true,"cost":7,"w":2,"a":1,"d":2,"hp":3,"text":"Action: Pay 1 resource from a hero's resource pool to add 1 resource to Bifur's resource pool. Any player may trigger this ability. (Limit once per round.)","back":"player"},"51223bd0-ffd1-11df-a976-0801207c9024":{"name":"Durin's Song","img":"51223bd0-ffd1-11df-a976-0801207c9024.jpg","type":"Event","sphere":"Leadership","traits":["Song"],"cost":1,"text":"Action: Choose a Dwarf hero. That hero gets +2 [willpower], +2 [attack], and +2 [defense] until the end of the round.","back":"player"},"51223bd0-ffd1-11df-a976-0801207c9050":{"name":"Narvi's Belt","img":"51223bd0-ffd1-11df-a976-0801207c9050.jpg","type":"Attachment","sphere":"Leadership","traits":["Item"],"kw":"Attach to a Dwarf hero.","unique":true,"cost":2,"text":"Action: Exhaust Narvi's Belt to give attached hero a [leadership], [lore], [tactics], or [spirit] icon until the end of the phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801207c9030":{"name":"Erebor Record Keeper","img":"51223bd0-ffd1-11df-a976-0801207c9030.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf"],"cost":1,"w":1,"hp":1,"text":"Erebor Record Keeper cannot attack or defend.  Action: Exhaust Erebor Record Keeper and pay 1 [lore] resource to choose and ready a Dwarf character.","back":"player"},"51223bd0-ffd1-11df-a976-0801210c9009":{"name":"Legacy of Durin","img":"51223bd0-ffd1-11df-a976-0801210c9009.jpg","type":"Attachment","sphere":"Lore","traits":["Condition"],"kw":"Attach to a Dwarf hero.","unique":true,"cost":1,"text":"Response: After you play a Dwarf character from your hand, exhaust Legacy of Durin to draw 1 card.","back":"player"},"51223bd0-ffd1-11df-a976-0801209c9015":{"name":"Lure of Moria","img":"51223bd0-ffd1-11df-a976-0801209c9015.jpg","type":"Event","sphere":"Leadership","cost":3,"text":"Action: Ready all Dwarf characters.","back":"player"},"51223bd0-ffd1-11df-a976-0801209c9007":{"name":"Bombur","img":"51223bd0-ffd1-11df-a976-0801209c9007.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf"],"unique":true,"cost":3,"d":1,"hp":3,"text":"Action: Exhaust Bombur to choose a location. That location gets -1 [threat] until the end of the phase. (That location does not contribute its [threat] instead if it is an Underground location.)","back":"player"},"51223bd0-ffd1-11df-a976-0801212c9021":{"name":"Longbeard Elder","img":"51223bd0-ffd1-11df-a976-0801212c9021.jpg","type":"Ally","sphere":"Leadership","traits":["Dwarf"],"cost":3,"w":2,"a":1,"d":1,"hp":2,"text":"Response: After Longbeard Elder commits to a quest, look at the top card of the encounter deck. If that card is a location, place 1 progress token on the current quest. Otherwise, Longbeard Elder gets -1 [willpower] until the end of the phase.","back":"player"},"3eb1141f-bf1f-401e-a69d-e4df0af2a8ab":{"name":"Ered Nimrais Prospector","img":"3eb1141f-bf1f-401e-a69d-e4df0af2a8ab.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf"],"cost":2,"w":1,"d":1,"hp":2,"text":"Response: After Ered Nimrais Prospector enters play, discard the top 3 cards of your deck. Then, choose and shuffle 1 card from your discard pile back into your deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801212c9017":{"name":"Healing Herbs","img":"51223bd0-ffd1-11df-a976-0801212c9017.jpg","type":"Attachment","sphere":"Lore","kw":"Attach to a [lore] hero.","text":"Action: Discard Healing Herbs and exhaust attached hero to heal all damage on 1 character.","back":"player"},"18d5f7fd-9d6e-44aa-9463-3530278f8c51":{"name":"Erebor Guard","img":"18d5f7fd-9d6e-44aa-9463-3530278f8c51.jpg","type":"Ally","sphere":"Spirit","traits":["Dwarf","Warrior"],"kw":"Sentinel.","cost":4,"a":1,"d":2,"hp":3,"text":"Response: When you play Erebor Guard from your hand, discard the top 2 cards of your deck to reduce its cost by 2.","back":"player"},"86e1977f-0a24-46c8-a7ee-d5d78410f1a3":{"name":"Dwarf Pipe","img":"86e1977f-0a24-46c8-a7ee-d5d78410f1a3.jpg","type":"Attachment","sphere":"Spirit","traits":["Item","Pipe"],"cost":1,"text":"Attach to a Dwarf character. Limit 1 per character. Response: After a card is discarded from your deck, exhaust Dwarf Pipe to place that card on the bottom of your deck.","back":"player"},"6a871e9e-fa3e-4556-8730-09aed1a3ec40":{"name":"Hidden Cache","img":"6a871e9e-fa3e-4556-8730-09aed1a3ec40.jpg","type":"Event","sphere":"Neutral","text":"Response: After Hidden Cache is discarded from your deck, add 2 resources to the resource pool of a hero you control.  Action: Action: Spend 1 resource to draw 1 card.","back":"player"},"c984e8e8-94a6-4af6-9455-824ad2cf46f9":{"name":"Magic Ring","img":"c984e8e8-94a6-4af6-9455-824ad2cf46f9.jpg","type":"Attachment","sphere":"Neutral","traits":["Artifact","Item","Ring"],"cost":2,"text":"Attach to a hero. Limit 1 per hero and 1 per deck. Action: Exhaust Magic Ring and raise your threat by 1 to (choose one): heal 1 damage from attached hero, add 1 resource to attached hero's pool, or ready attached hero.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9062":{"name":"Nori","img":"51223bd0-ffd1-11df-a976-1801204c9062.jpg","type":"Hero","sphere":"Spirit","traits":["Dwarf"],"unique":true,"cost":9,"w":2,"a":1,"d":2,"hp":4,"text":"Response: After you play a Dwarf character from your hand, reduce your threat by 1.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9032":{"name":"Fili","img":"51223bd0-ffd1-11df-a976-1801204c9032.jpg","type":"Ally","sphere":"Leadership","traits":["Dwarf"],"unique":true,"cost":3,"w":1,"a":1,"d":1,"hp":2,"text":"Response: After you play Fili from your hand during the planning phase, search your deck for Kili and put him into play under your control. Then, shuffle your deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801207c9088":{"name":"Zigil Miner","img":"51223bd0-ffd1-11df-a976-0801207c9088.jpg","type":"Ally","sphere":"Spirit","traits":["Dwarf"],"cost":2,"w":1,"a":1,"d":1,"hp":1,"text":"Action: Exhaust Zigil Miner and name a number to discard the top 2 cards of your deck. If at least one of those cards has cost equal to the named number, choose a hero you control. For each card that matches the named number, add 1 resource to that hero's resource pool.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9055":{"name":"Kili","img":"51223bd0-ffd1-11df-a976-1801204c9055.jpg","type":"Ally","sphere":"Spirit","traits":["Dwarf"],"unique":true,"cost":3,"w":1,"a":1,"d":1,"hp":2,"text":"Response: After you play Kili from your hand during the planning phase, search your deck for Fili and put him into play under your control. Then, shuffle your deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9061":{"name":"Miner of the Iron Hills","img":"51223bd0-ffd1-11df-a976-0801200c9061.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf"],"cost":2,"a":1,"d":1,"hp":2,"text":"Response: After Miner of the Iron Hills enters play, choose and discard 1 Condition attachment from play.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9059":{"name":"Erebor Hammersmith","img":"51223bd0-ffd1-11df-a976-0801200c9059.jpg","type":"Ally","sphere":"Lore","traits":["Dwarf","Craftsman"],"cost":2,"w":1,"a":1,"d":1,"hp":3,"text":"Response: After you play Erebor Hammersmith, return the topmost attachment in any player's discard pile to his hand.","back":"player"},"51223bd0-ffd1-11df-a976-1801204c9011":{"name":"A Very Good Tale","img":"51223bd0-ffd1-11df-a976-1801204c9011.jpg","type":"Event","sphere":"Leadership","text":"Action: Exhaust 2 allies you control to shuffle your deck and discard the top 5 cards. Put up to 2 allies discarded by this effect into play under your control. The total cost of the allies put into play cannot exceed the total cost of the allies exhausted to pay for this effect.","back":"player"},"51223bd0-ffd1-11df-a976-0801213c9028":{"name":"We Are Not Idle","img":"51223bd0-ffd1-11df-a976-0801213c9028.jpg","type":"Event","sphere":"Leadership","text":"Action: Exhaust X Dwarf characters to add X resources to a hero's resource pool and draw 1 card.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9001":{"name":"Aragorn","img":"51223bd0-ffd1-11df-a976-0801200c9001.jpg","type":"Hero","sphere":"Leadership","traits":["Dunedain","Noble","Ranger"],"kw":"Sentinel.","unique":true,"cost":12,"w":2,"a":3,"d":2,"hp":5,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9003":{"name":"Glóin","img":"51223bd0-ffd1-11df-a976-0801200c9003.jpg","type":"Hero","sphere":"Leadership","traits":["Dwarf","Noble"],"unique":true,"cost":9,"w":2,"a":2,"d":1,"hp":4,"text":"Response: After Gloin suffers damage, add 1 resource to his resource pool for each point of damage he just suffered.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9002":{"name":"Théodred","img":"51223bd0-ffd1-11df-a976-0801200c9002.jpg","type":"Hero","sphere":"Leadership","traits":["Noble","Rohan","Warrior"],"unique":true,"cost":8,"w":1,"a":2,"d":1,"hp":4,"text":"Response: After Theodred commits to a quest, choose a hero committed to that quest. Add 1 resource to that hero's resource pool.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9019":{"name":"Brok Ironfist","img":"51223bd0-ffd1-11df-a976-0801200c9019.jpg","type":"Ally","sphere":"Leadership","traits":["Dwarf","Warrior"],"unique":true,"cost":6,"w":2,"a":2,"d":1,"hp":4,"text":"Response: After a Dwarf hero you control leaves play, put Brok Ironfist into play from your hand.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9013":{"name":"Guard of the Citadel","img":"51223bd0-ffd1-11df-a976-0801200c9013.jpg","type":"Ally","sphere":"Leadership","traits":["Gondor","Warrior"],"cost":2,"w":1,"a":1,"hp":2,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9018":{"name":"Longbeard Orc Slayer","img":"51223bd0-ffd1-11df-a976-0801200c9018.jpg","type":"Ally","sphere":"Leadership","traits":["Dwarf","Warrior"],"cost":4,"a":2,"d":1,"hp":3,"text":"Response: After Longbeard Orc Slayer enters play, deal 1 damage to each Orc enemy in play.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9017":{"name":"Silverlode Archer","img":"51223bd0-ffd1-11df-a976-0801200c9017.jpg","type":"Ally","sphere":"Leadership","traits":["Archer","Silvan"],"kw":"Ranged.","cost":3,"w":1,"a":2,"hp":1,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9016":{"name":"Snowbourn Scout","img":"51223bd0-ffd1-11df-a976-0801200c9016.jpg","type":"Ally","sphere":"Leadership","traits":["Rohan","Scout"],"cost":1,"d":1,"hp":1,"text":"Response: After Snowbourn Scout enters play, choose a location. Place 1 progress token on that location.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9015":{"name":"Son of Arnor","img":"51223bd0-ffd1-11df-a976-0801200c9015.jpg","type":"Ally","sphere":"Leadership","traits":["Dunedain"],"cost":3,"a":2,"hp":2,"text":"Response: After Son of Arnor enters play, choose an enemy card in the staging area or currently engaged with another player. Engage that enemy.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9027":{"name":"Celebrían's Stone","img":"51223bd0-ffd1-11df-a976-0801200c9027.jpg","type":"Attachment","sphere":"Leadership","traits":["Artifact","Item"],"kw":"Attach to a hero. Restricted.","unique":true,"cost":2,"text":"Attached hero gains +2 [willpower].  If attached hero is Aragorn, he also gains a [spirit] resource icon.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9021":{"name":"Common Cause","img":"51223bd0-ffd1-11df-a976-0801200c9021.jpg","type":"Event","sphere":"Leadership","text":"Action: Exhaust 1 hero you control to choose and ready a different hero.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9020":{"name":"Ever Vigilant","img":"51223bd0-ffd1-11df-a976-0801200c9020.jpg","type":"Event","sphere":"Leadership","cost":1,"text":"Action: Choose and ready 1 ally card.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9022":{"name":"For Gondor!","img":"51223bd0-ffd1-11df-a976-0801200c9022.jpg","type":"Event","sphere":"Leadership","cost":2,"text":"Action: Until the end of the phase, all characters get +1 [attack]. All Gondor characters also get +1 [defense] until the end of the phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9025":{"name":"Grim Resolve","img":"51223bd0-ffd1-11df-a976-0801200c9025.jpg","type":"Event","sphere":"Leadership","cost":5,"text":"Action: Ready all character cards in play.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9023":{"name":"Sneak Attack","img":"51223bd0-ffd1-11df-a976-0801200c9023.jpg","type":"Event","sphere":"Leadership","cost":1,"text":"Action: Put 1 ally card into play from your hand. At the end of the phase, if that ally is still in play, return it to your hand.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9010":{"name":"Denethor","img":"51223bd0-ffd1-11df-a976-0801200c9010.jpg","type":"Hero","sphere":"Lore","traits":["Gondor","Noble","Steward"],"unique":true,"cost":8,"w":1,"a":1,"d":3,"hp":3,"text":"Action: Exhaust Denethor to look at the top card of the encounter deck. You may move that card to the bottom of the deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9011":{"name":"Glorfindel","img":"51223bd0-ffd1-11df-a976-0801200c9011.jpg","type":"Hero","sphere":"Lore","traits":["Noble","Noldor","Warrior"],"unique":true,"cost":12,"w":3,"a":3,"d":1,"hp":5,"text":"Action: Pay 1 resource from Glorfindel's pool to heal 1 damage on any character. (Limit once per round.)","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9012":{"name":"Beravor","img":"51223bd0-ffd1-11df-a976-0801200c9012.jpg","type":"Hero","sphere":"Lore","traits":["Dunedain","Ranger"],"unique":true,"cost":10,"w":2,"a":2,"d":2,"hp":4,"text":"Action: Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9058":{"name":"Daughter of the Nimrodel","img":"51223bd0-ffd1-11df-a976-0801200c9058.jpg","type":"Ally","sphere":"Lore","traits":["Silvan"],"cost":3,"w":1,"hp":1,"text":"Action: Exhaust Daughter of the Nimrodel to heal up to 2 damage on any 1 hero.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9062":{"name":"Gléowine","img":"51223bd0-ffd1-11df-a976-0801200c9062.jpg","type":"Ally","sphere":"Lore","traits":["Minstrel","Rohan"],"unique":true,"cost":2,"w":1,"hp":2,"text":"Action: Exhaust Gleowine to choose a player. That player draws 1 card.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9063":{"name":"Lore of Imladris","img":"51223bd0-ffd1-11df-a976-0801200c9063.jpg","type":"Event","sphere":"Lore","cost":2,"text":"Action: Choose a character. Heal all damage from that character.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9064":{"name":"Lórien's Wealth","img":"51223bd0-ffd1-11df-a976-0801200c9064.jpg","type":"Event","sphere":"Lore","cost":3,"text":"Action: Choose a player. That player draws 3 cards.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9065":{"name":"Radagast's Cunning","img":"51223bd0-ffd1-11df-a976-0801200c9065.jpg","type":"Event","sphere":"Lore","cost":1,"text":"Quest Action: Choose an enemy in the staging area. Until the end of the phase, that enemy does not contribute its [threat].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9066":{"name":"Secret Paths","img":"51223bd0-ffd1-11df-a976-0801200c9066.jpg","type":"Event","sphere":"Lore","cost":1,"text":"Quest Action: Choose a location in the staging area. Until the end of the phase, that location does not contribute its [threat].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9067":{"name":"Gandalf's Search","img":"51223bd0-ffd1-11df-a976-0801200c9067.jpg","type":"Event","sphere":"Lore","text":"Action: Look at the top X cards of any player's deck, add 1 of those cards to its owner's hand, and return the rest to the top of the deck in any order.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9068":{"name":"Beorn's Hospitality","img":"51223bd0-ffd1-11df-a976-0801200c9068.jpg","type":"Event","sphere":"Lore","cost":5,"text":"Action: Choose a player. Heal all damage on each hero controlled by that player.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9069":{"name":"Forest Snare","img":"51223bd0-ffd1-11df-a976-0801200c9069.jpg","type":"Attachment","sphere":"Lore","traits":["Item","Trap"],"kw":"Attach to an enemy engaged with a player.","cost":3,"text":"Attached enemy cannot attack.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9070":{"name":"Protector of Lórien","img":"51223bd0-ffd1-11df-a976-0801200c9070.jpg","type":"Attachment","sphere":"Lore","traits":["Title"],"kw":"Attach to a hero.","cost":1,"text":"Action: Discard a card from your hand to give attached hero +1 [defense] or +1 [willpower] until the end of the phase. Limit 3 times per phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9071":{"name":"Dark Knowledge","img":"51223bd0-ffd1-11df-a976-0801200c9071.jpg","type":"Attachment","sphere":"Lore","traits":["Condition"],"kw":"Attach to a hero. Attached hero gets -1 [willpower].","cost":1,"text":"Response: Exhaust Dark Knowledge to look at 1 shadow card that was just dealt to an enemy attacking you.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9072":{"name":"Self Preservation","img":"51223bd0-ffd1-11df-a976-0801200c9072.jpg","type":"Attachment","sphere":"Lore","traits":["Skill"],"kw":"Attach to a character.","cost":3,"text":"Action: Exhaust Self Preservation to heal 2 points of damage from attached character.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9007":{"name":"Éowyn","img":"51223bd0-ffd1-11df-a976-0801200c9007.jpg","type":"Hero","sphere":"Spirit","traits":["Noble","Rohan"],"unique":true,"cost":9,"w":4,"a":1,"d":1,"hp":3,"text":"Action: Discard 1 card from your hand to give Éowyn +1 [willpower] until the end of the phase. This effect may be triggered by each player once each round.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9009":{"name":"Dunhere","img":"51223bd0-ffd1-11df-a976-0801200c9009.jpg","type":"Hero","sphere":"Spirit","traits":["Rohan","Warrior"],"unique":true,"cost":8,"w":1,"a":2,"d":1,"hp":4,"text":"Dunhere can target enemies in the staging area when he attacks alone. When doing so, he gets +1 [attack].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9043":{"name":"Wandering Took","img":"51223bd0-ffd1-11df-a976-0801200c9043.jpg","type":"Ally","sphere":"Spirit","traits":["Hobbit"],"cost":2,"w":1,"a":1,"d":1,"hp":2,"text":"Action: Reduce your threat by 3 to give control of Wandering Took to another player. Raise that player's threat by 3.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9008":{"name":"Eleanor","img":"51223bd0-ffd1-11df-a976-0801200c9008.jpg","type":"Hero","sphere":"Spirit","traits":["Gondor","Noble"],"unique":true,"cost":7,"w":1,"a":1,"d":2,"hp":3,"text":"Response: Exhaust Eleanor to cancel the \"when revealed\" effects of a treachery card just revealed by the encounter deck. Then, discard that card, and replace it with the next card from the encounter deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9045":{"name":"Northern Tracker","img":"51223bd0-ffd1-11df-a976-0801200c9045.jpg","type":"Ally","sphere":"Spirit","traits":["Dunedain","Ranger"],"cost":4,"w":1,"a":2,"d":2,"hp":3,"text":"Response: After Northern Tracker commits to a quest, place 1 progress token on each location in the staging area.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9044":{"name":"Lórien Guide","img":"51223bd0-ffd1-11df-a976-0801200c9044.jpg","type":"Ally","sphere":"Spirit","traits":["Silvan","Scout"],"cost":3,"w":1,"a":1,"hp":2,"text":"Response: After Lorien Guide commits to a quest, place 1 progress token on the active location.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9046":{"name":"The Galadhrim's Greeting","img":"51223bd0-ffd1-11df-a976-0801200c9046.jpg","type":"Event","sphere":"Spirit","cost":3,"text":"Action: Reduce one player's threat by 6, or reduce each player's threat by 2.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9047":{"name":"Strength of Will","img":"51223bd0-ffd1-11df-a976-0801200c9047.jpg","type":"Event","sphere":"Spirit","text":"Response: After you travel to a location, exhaust a [spirit] character to place 2 progress tokens on that location.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9048":{"name":"Hasty Stroke","img":"51223bd0-ffd1-11df-a976-0801200c9048.jpg","type":"Event","sphere":"Spirit","cost":1,"text":"Response: Cancel a shadow effect just triggered during combat.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9049":{"name":"Will of the West","img":"51223bd0-ffd1-11df-a976-0801200c9049.jpg","type":"Event","sphere":"Spirit","cost":1,"text":"Action: Choose a player. Shuffle that player's discard pile back into his deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9051":{"name":"Stand and Fight","img":"51223bd0-ffd1-11df-a976-0801200c9051.jpg","type":"Event","sphere":"Spirit","text":"Action: Choose an ally with a printed cost of X in any player's discard pile. Put that ally into play under your control. (The chosen ally can belong to any sphere of influence.)","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9052":{"name":"A Light in the Dark","img":"51223bd0-ffd1-11df-a976-0801200c9052.jpg","type":"Event","sphere":"Spirit","cost":2,"text":"Action: Choose an enemy engaged with a player. Return that enemy to the staging area.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9053":{"name":"Dwarven Tomb","img":"51223bd0-ffd1-11df-a976-0801200c9053.jpg","type":"Event","sphere":"Spirit","cost":1,"text":"Action: Return 1 [spirit] card from your discard pile to your hand.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9054":{"name":"Fortune or Fate","img":"51223bd0-ffd1-11df-a976-0801200c9054.jpg","type":"Event","sphere":"Spirit","cost":5,"text":"Action: Choose a hero in any player's discard pile. Put that card into play, under its owner's control.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9055":{"name":"The Favor of the Lady","img":"51223bd0-ffd1-11df-a976-0801200c9055.jpg","type":"Attachment","sphere":"Spirit","traits":["Condition"],"kw":"Attach to a hero.","cost":2,"text":"Attached hero gains +1 [willpower].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9057":{"name":"Unexpected Courage","img":"51223bd0-ffd1-11df-a976-0801200c9057.jpg","type":"Attachment","sphere":"Spirit","traits":["Condition"],"kw":"Attach to a hero.","cost":2,"text":"Action: Exhaust Unexpected Courage to ready attached hero.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9056":{"name":"Power in the Earth","img":"51223bd0-ffd1-11df-a976-0801200c9056.jpg","type":"Attachment","sphere":"Spirit","traits":["Condition"],"kw":"Attach to a location.","cost":1,"text":"Attached location gets -1 [threat].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9004":{"name":"Gimli","img":"51223bd0-ffd1-11df-a976-0801200c9004.jpg","type":"Hero","sphere":"Tactics","traits":["Dwarf","Noble","Warrior"],"unique":true,"cost":11,"w":2,"a":2,"d":2,"hp":5,"text":"Gimli gets +1 [attack] for each damage token on him.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9006":{"name":"Thalin","img":"51223bd0-ffd1-11df-a976-0801200c9006.jpg","type":"Hero","sphere":"Tactics","traits":["Dwarf","Warrior"],"unique":true,"cost":9,"w":1,"a":2,"d":2,"hp":4,"text":"While Thalin is committed to a quest, deal 1 damage to each enemy as it is revealed by the encounter deck.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9028":{"name":"Veteran Axehand","img":"51223bd0-ffd1-11df-a976-0801200c9028.jpg","type":"Ally","sphere":"Tactics","traits":["Dwarf","Warrior"],"cost":2,"a":2,"d":1,"hp":2,"back":"player"},"51223bd0-ffd1-11df-a976-0801200c9005":{"name":"Legolas","img":"51223bd0-ffd1-11df-a976-0801200c9005.jpg","type":"Hero","sphere":"Tactics","traits":["Noble","Silvan","Warrior"],"kw":"Ranged.","unique":true,"cost":9,"w":1,"a":3,"d":1,"hp":4,"text":"Response: After Legolas participates in an attack that destroys an enemy, place 2 progress tokens on the current quest.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9031":{"name":"Beorn","img":"51223bd0-ffd1-11df-a976-0801200c9031.jpg","type":"Ally","sphere":"Tactics","traits":["Beorning","Warrior"],"unique":true,"cost":6,"w":1,"a":3,"d":3,"hp":6,"text":"Action: Beorn gains +5 [attack] until the end of the phase. At the end of the phase in which you trigger this effect, shuffle Beorn back into your deck. (Limit once per round.)","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9032":{"name":"Blade Mastery","img":"51223bd0-ffd1-11df-a976-0801200c9032.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Action: Choose a character. Until the end of the phase, that character gains +1 [attack] and +1 [defense].","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9033":{"name":"Rain of Arrows","img":"51223bd0-ffd1-11df-a976-0801200c9033.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Action: Exhaust a character you control with the ranged keyword to choose a player. Deal 1 damage to each enemy engaged with that player.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9035":{"name":"Quick Strike","img":"51223bd0-ffd1-11df-a976-0801200c9035.jpg","type":"Event","sphere":"Tactics","cost":1,"text":"Action: Exhaust a character you control to immediately declare it as an attacker (and resolve its attack) against any eligible enemy target.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9036":{"name":"Thicket of Spears","img":"51223bd0-ffd1-11df-a976-0801200c9036.jpg","type":"Event","sphere":"Tactics","cost":3,"text":"You must use resources from 3 different heroes' pools to pay for this card.  Action: Choose a player. That player's engaged enemies cannot attack that player this phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9037":{"name":"Swift Strike","img":"51223bd0-ffd1-11df-a976-0801200c9037.jpg","type":"Event","sphere":"Tactics","cost":2,"text":"Response: After a character is declared as a defender, deal 2 damage to the attacking enemy.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9038":{"name":"Stand Together","img":"51223bd0-ffd1-11df-a976-0801200c9038.jpg","type":"Event","sphere":"Tactics","text":"Action: Choose a player. That player may declare any number of his eligible characters as defenders against each enemy attacking him this phase.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9039":{"name":"Blade of Gondolin","img":"51223bd0-ffd1-11df-a976-0801200c9039.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Weapon"],"kw":"Attach to a hero. Restricted.","cost":1,"text":"Attached hero gets +1 [attack] when attacking an Orc.  Response: After attached hero attacks and destroys an enemy, place 1 progress token on the current quest.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9040":{"name":"Citadel Plate","img":"51223bd0-ffd1-11df-a976-0801200c9040.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Armor"],"kw":"Attach to a hero. Restricted.","cost":4,"text":"Attached hero gets +4 Hit Points.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9042":{"name":"Horn of Gondor","img":"51223bd0-ffd1-11df-a976-0801200c9042.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Artifact"],"kw":"Attach to a hero. Restricted.","unique":true,"cost":1,"text":"Response: After a character is destroyed, add 1 resource to attached hero's pool.","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9041":{"name":"Dwarven Axe","img":"51223bd0-ffd1-11df-a976-0801200c9041.jpg","type":"Attachment","sphere":"Tactics","traits":["Item","Weapon"],"kw":"Attach to a hero. Restricted.","cost":2,"text":"Attached hero gains +1 [attack]. (+2 [attack] instead if attached hero is a Dwarf.)","back":"player"},"51223bd0-ffd1-11df-a976-0801200c9119":[{"name":"Flies and Spiders","img":"51223bd0-ffd1-11df-a976-0801200c9119.jpg","type":"Quest","cost":1,"text":"Setup: Search the encounter deck for 1 copy of the Forest Spider and 1 copy of the Old Forest Road, and add them to the staging area. Then, shuffle the encounter deck.","back":"multi_sided","set":"Passage Through Mirkwood","side":"A"},{"name":"Flies and Spiders","img":"51223bd0-ffd1-11df-a976-0801200c9119.B.jpg","type":"Quest","cost":1,"qp":8,"back":"multi_sided","set":"Passage Through Mirkwood","side":"B"}],"51223bd0-ffd1-11df-a976-0801200c9121":[{"name":"A Fork in the Road","img":"51223bd0-ffd1-11df-a976-0801200c9121.jpg","type":"Quest","cost":2,"back":"multi_sided","set":"Passage Through Mirkwood","side":"A"},{"name":"A Fork in the Road","img":"51223bd0-ffd1-11df-a976-0801200c9121.B.jpg","type":"Quest","cost":2,"qp":2,"text":"Forced: When you defeat this stage, proceed to one of the 2 \"A Chosen Path\" stages, at random.","back":"multi_sided","set":"Passage Through Mirkwood","side":"B"}],"51223bd0-ffd1-11df-a976-0801200c9123":[{"name":"A Chosen Path","img":"51223bd0-ffd1-11df-a976-0801200c9123.jpg","type":"Quest","cost":3,"back":"multi_sided","set":"Passage Through Mirkwood","side":"A"},{"name":"Don't Leave the Path!","img":"51223bd0-ffd1-11df-a976-0801200c9123.B.jpg","type":"Quest","cost":3,"text":"When Revealed: Each player must search the encounter deck and discard pile for 1 Spider card of his choice, and add it to the staging area.  The players must find and defeat Ungoliant's Spawn to win this game.","back":"multi_sided","set":"Passage Through Mirkwood","side":"B"}],"51223bd0-ffd1-11df-a976-0801200c9125":[{"name":"A Chosen Path","img":"51223bd0-ffd1-11df-a976-0801200c9125.jpg","type":"Quest","cost":3,"back":"multi_sided","set":"Passage Through Mirkwood","side":"A"},{"name":"Beorn's Path","img":"51223bd0-ffd1-11df-a976-0801200c9125.B.jpg","type":"Quest","cost":3,"qp":10,"text":"Players cannot defeat this stage while Ungoliant's Spawn is in play. If players defeat this stage, they have won the game.","back":"multi_sided","set":"Passage Through Mirkwood","side":"B"}],"51223bd0-ffd1-11df-a976-0801200c9074":{"name":"King Spider","img":"51223bd0-ffd1-11df-a976-0801200c9074.jpg","type":"Enemy","traits":["Creature","Spider"],"eng":20,"thr":2,"a":3,"d":1,"hp":3,"text":"When Revealed: Each player must choose and exhaust 1 character he controls.","shadow":"Shadow: Defending player must choose and exhaust 1 character he controls. (2 characters instead if this attack is undefended.)","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9075":{"name":"Hummerhorns","img":"51223bd0-ffd1-11df-a976-0801200c9075.jpg","type":"Enemy","traits":["Creature","Insect"],"eng":40,"thr":1,"a":2,"hp":3,"vp":5,"text":"Forced: After Hummerhorns engages you, deal 5 damage to a single hero you control.","shadow":"Shadow: Deal 1 damage to each character the defending player controls. (2 damage instead if this attack is undefended.)","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9076":{"name":"Ungoliant's Spawn","img":"51223bd0-ffd1-11df-a976-0801200c9076.jpg","type":"Enemy","traits":["Creature","Spider"],"eng":32,"thr":3,"a":5,"d":2,"hp":9,"text":"When Revealed: Each character currently committed to a quest gets -1 [willpower] until the end of the phase.","shadow":"Shadow: Raise defending player's threat by 4. (Raise defending player's threat by 8 instead if this attack is undefended.)","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9089":{"name":"Dol Guldur Orcs","img":"51223bd0-ffd1-11df-a976-0801200c9089.jpg","type":"Enemy","traits":["Dol Guldur","Orc"],"eng":10,"thr":2,"a":2,"hp":3,"text":"When Revealed: The first player chooses 1 character currently committed to a quest. Deal 2 damage to that character.","shadow":"Shadow: attacking enemy gets +1 [attack]. (+3 [attack] instead if this attack is undefended.)","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9090":{"name":"Chieftan Ufthak","img":"51223bd0-ffd1-11df-a976-0801200c9090.jpg","type":"Enemy","traits":["Dol Guldur","Orc"],"eng":35,"thr":2,"a":3,"d":3,"hp":6,"vp":4,"text":"Chieftain Ufthak get +2 [attack] for each resource token on him.  Forced: After Chieftain Ufthak attacks, place 1 resource token on him.","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9091":{"name":"Dol Guldur Beastmaster","img":"51223bd0-ffd1-11df-a976-0801200c9091.jpg","type":"Enemy","traits":["Dol Guldur","Orc"],"eng":35,"thr":2,"a":3,"d":1,"hp":5,"text":"Forced: When Dol Guldur Beastmaster attacks, deal it 1 additional shadow card.","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9096":{"name":"Forest Spider","img":"51223bd0-ffd1-11df-a976-0801200c9096.jpg","type":"Enemy","traits":["Creature","Spider"],"eng":25,"thr":2,"a":2,"d":1,"hp":4,"text":"Forced: After Forest Spider engages a player, it gets +1 [attack] until the end of the round.","shadow":"Shadow: Defending player must choose and discard 1 attachment he controls.","back":"encounter","set":"Passage Through Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9097":{"name":"East Bight Patrol","img":"51223bd0-ffd1-11df-a976-0801200c9097.jpg","type":"Enemy","traits":["Goblin","Orc"],"eng":5,"thr":3,"a":3,"d":1,"hp":2,"shadow":"Shadow: attacking enemy gets +1 [attack]. (If this attack is undefended, also raise your threat by 3.)","back":"encounter","set":"Passage Through Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9098":{"name":"Black Forest Bats","img":"51223bd0-ffd1-11df-a976-0801200c9098.jpg","type":"Enemy","traits":["Creature"],"eng":15,"thr":1,"a":1,"hp":2,"text":"When Revealed: Each player must choose 1 character currently committed to a quest, and remove that character from the quest. (The chosen character does not ready.)","back":"encounter","set":"Passage Through Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9077":{"name":"Great Forest Web","img":"51223bd0-ffd1-11df-a976-0801200c9077.jpg","type":"Location","traits":["Forest"],"thr":2,"qp":2,"text":"Travel: Each player must exhaust 1 hero he controls to travel here.","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9078":{"name":"Mountains of Mirkwood","img":"51223bd0-ffd1-11df-a976-0801200c9078.jpg","type":"Location","traits":["Forest","Mountain"],"thr":2,"qp":3,"text":"Travel: Reveal the top card of the encounter deck and add it to the staging area to travel here.  Response: After Mountains of Mirkwood leaves play as an explored location, each player may search the top 5 cards of his deck for 1 card and add it to his hand. Shuffle the rest of the searched cards back into their owners' decks.","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9094":{"name":"Necromancer's Pass","img":"51223bd0-ffd1-11df-a976-0801200c9094.jpg","type":"Location","traits":["Stronghold","Dol Guldur"],"thr":3,"qp":2,"text":"Travel: The first player must discard 2 cards from his hand at random to travel here.","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9095":{"name":"Enchanted Stream","img":"51223bd0-ffd1-11df-a976-0801200c9095.jpg","type":"Location","traits":["Forest"],"thr":2,"qp":2,"text":"While Enchanted Stream is the active location, players cannot draw cards.","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9099":{"name":"Old Forest Road","img":"51223bd0-ffd1-11df-a976-0801200c9099.jpg","type":"Location","traits":["Forest"],"thr":1,"qp":3,"text":"Response: After you travel to Old Forest Road, the first player may choose and ready 1 character he controls.","back":"encounter","set":"Passage Through Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9100":{"name":"Forest Gate","img":"51223bd0-ffd1-11df-a976-0801200c9100.jpg","type":"Location","traits":["Forest"],"thr":2,"qp":4,"text":"Response: After you travel to Forest Gate, the first player may draw 2 cards.","back":"encounter","set":"Passage Through Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9079":{"name":"Eyes of the Forest","img":"51223bd0-ffd1-11df-a976-0801200c9079.jpg","type":"Treachery","text":"When Revealed: Each player discards all event cards in his hand.","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9080":{"name":"Caught in a Web","img":"51223bd0-ffd1-11df-a976-0801200c9080.jpg","type":"Treachery","text":"When Revealed: The player with the highest threat level attaches this card to one of his heroes. (Counts as a Condition attachment with the text: \"Attached hero does not ready during the refresh phase unless you pay 2 resources from that hero's pool.\")","back":"encounter","set":"Spiders of Mirkwood"},"51223bd0-ffd1-11df-a976-0801200c9092":{"name":"Driven by Shadow","img":"51223bd0-ffd1-11df-a976-0801200c9092.jpg","type":"Treachery","text":"When Revealed: Each enemy and each location currently in the staging area gets +1 [threat] until the end of the phase. If there are no cards in the staging area, Driven by Shadow gains surge.","shadow":"Shadow: Choose and discard 1 attachment from the defending character. (If this attack is undefended, discard all attachments you control.)","back":"encounter","set":"Dol Guldur Orcs"},"51223bd0-ffd1-11df-a976-0801200c9093":{"name":"The Necromancer's Reach","img":"51223bd0-ffd1-11df-a976-0801200c9093.jpg","type":"Treachery","text":"When Revealed: Deal 1 damage to each exhausted character.","back":"encounter","set":"Dol Guldur Orcs"}};
+const STARTERS={"starterRohan":{"name":"Riders of Rohan","heroes":["068e0590-6bb4-429e-8a2b-2ef0869c7c4f","4cca8984-2e4e-4df2-ac96-86af18b2a961","21cfb9e9-6777-4bc6-ace6-08fe68e949a4"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9030",2],["51223bd0-ffd1-11df-a976-0801200c9034",2],["51223bd0-ffd1-11df-a976-0801200c9050",2],["51223bd0-ffd1-11df-a976-0801200c9073",2],["0b179f39-f202-4fe7-b930-0f3db582bc3e",1],["e73ef9d3-e2a1-400b-9ed7-bfdfd0a3bc2a",2],["0916b82a-068e-4ca3-9554-f589a58e82fe",3],["ae807a4c-d656-42a1-bf2c-024eaffc9fc6",2],["6f02e0de-b54d-4c13-97b8-2f3a53b3aa77",2],["52a0f137-da57-4c41-b455-9671aecd5298",2],["8047c8c2-1569-428c-865e-0459c2733db3",2],["38420e0c-f73c-4df4-8161-c189fecb9114",3],["51223bd0-ffd1-11df-a976-0801201c9009",2],["51223bd0-ffd1-11df-a976-0801203c9009",3],["51223bd0-ffd1-11df-a976-0801202c9009",3],["51223bd0-ffd1-11df-a976-0801203c9005",2],["51223bd0-ffd1-11df-a976-0801206c9003",2],["06baca74-330a-4038-9387-32ce8657dd8f",1],["51223bd0-ffd1-11df-a976-0801206c9026",3],["80cdd2b5-60cf-4d47-afe7-505b79abcb1b",2],["93a364f6-2a0f-4872-9770-aa7a1bd30d3d",3],["0567c2df-677c-4529-985a-54621088fe58",2],["0ee1f1e6-1952-4bad-8ecd-631e80f4ccc0",2]]},"starterGondor":{"name":"Defenders of Gondor","heroes":["4823aae3-46ef-4a75-89f9-cbd3aa1b9008","51223bd0-ffd1-11df-a976-0801203c9001","9e3a4b3b-7bb7-4403-984c-411af5ec8467"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9029",2],["51223bd0-ffd1-11df-a976-0801200c9034",2],["51223bd0-ffd1-11df-a976-0801200c9073",2],["5177774a-29a0-4ce7-890c-aae2fe01e611",3],["47deb269-e02b-426d-b64a-34a4adff44de",3],["28877bba-27de-4b19-a8ab-5d557b634172",2],["51223bd0-ffd1-11df-a976-0801200c9024",2],["3dc9ec01-71b6-48fd-8fe4-0c8fa2161fe3",2],["51223bd0-ffd1-11df-a976-1801204c9033",2],["0c65af6a-7038-476b-9318-a024cc94c8b6",2],["51223bd0-ffd1-11df-a976-0801200c9014",2],["4823aae3-46ef-4a75-89f9-cbd3aa1b9010",2],["4823aae3-46ef-4a75-89f9-cbd3aa1b9014",3],["51223bd0-ffd1-11df-a976-0801200c9026",2],["09134509-191b-4903-b4b5-5e650f8143c1",2],["4823aae3-46ef-4a75-89f9-cbd3aa1b9004",2],["83842580-bfe9-4d56-addf-e1d290eb7bcf",1],["29b76593-0ef3-410b-aa85-1c282d4b1582",1],["1f28f098-09d4-43fa-8fba-eae551a5d4fe",2],["4823aae3-46ef-4a75-89f9-cbd3aa1b9016",2],["4823aae3-46ef-4a75-89f9-cbd3aa1b9015",3],["d4f034b0-2444-4b61-a249-8d86e8856f7c",3],["2f0a3f18-c84f-4458-b6f7-2e6be9acee6b",3]]},"starterElves":{"name":"Elves of Lórien","heroes":["4c4cccd3-576a-41f1-8b6c-ba11b4cc3d4b","9d548a43-0ef8-45e6-ab95-7356d218d203","8d6a15a8-e363-46bb-8e49-0af45a1ea0d1"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9050",2],["d30fd38a-65fe-464d-acac-47d0f02deb05",3],["70c370e2-ae8e-4dff-bf38-619e9c6d0ce7",2],["51223bd0-ffd1-11df-a976-0801205c9014",2],["51223bd0-ffd1-11df-a976-0801200c9060",2],["51223bd0-ffd1-11df-a976-0801200c9073",2],["51223bd0-ffd1-11df-a976-0801206c9016",2],["51223bd0-ffd1-11df-a976-0801210c9005",2],["e4fd6e25-982a-464f-82d8-812269864d46",2],["f39eaad9-134d-406b-9111-e03c33e0cd16",2],["dad6e885-d535-4100-bd9f-4726ea7c7465",3],["b4d93180-0ebc-4a9b-9817-e761068570e3",3],["14936075-9e6a-43af-9497-dbee9df95781",3],["bd81ff6a-9c8f-415e-85fb-da84c21ef2a4",3],["b91ba94d-e6b9-41f6-89ed-df1fb1f22335",3],["17cb8a9a-6369-4ea9-a614-02908bd7b77f",2],["51223bd0-ffd1-11df-a976-0801212c9010",2],["ff3794e8-d8b1-48dc-a9f8-97ea7d6b3874",3],["9220dbae-e7fc-43fc-b772-043af7d4bda1",2],["17ed9b53-19f5-4ad1-ab91-14c2859e5a60",3],["f86ea37a-d70d-4ff2-ac36-2a0ff1f7ffa9",2]]},"starterDwarves":{"name":"Dwarves of Durin","heroes":["51223bd0-ffd1-11df-a976-1801204c9065","51223bd0-ffd1-11df-a976-0801206c9005","51223bd0-ffd1-11df-a976-0801207c9008"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9073",3],["51223bd0-ffd1-11df-a976-1801204c9024",2],["c2c8d69a-6639-49af-89ed-86f2ffc8c096",3],["51223bd0-ffd1-11df-a976-1801204c9027",2],["51223bd0-ffd1-11df-a976-1801204c9084",2],["6778eb01-6b07-4dbe-87f1-e854ab548813",2],["9152834a-5355-42ba-9592-1a3c1940d1a8",3],["51223bd0-ffd1-11df-a976-0801207c9024",2],["51223bd0-ffd1-11df-a976-0801207c9050",2],["51223bd0-ffd1-11df-a976-0801207c9030",3],["51223bd0-ffd1-11df-a976-0801210c9009",2],["51223bd0-ffd1-11df-a976-0801209c9015",2],["51223bd0-ffd1-11df-a976-0801209c9007",1],["51223bd0-ffd1-11df-a976-0801212c9021",3],["3eb1141f-bf1f-401e-a69d-e4df0af2a8ab",3],["51223bd0-ffd1-11df-a976-0801212c9017",2],["6a871e9e-fa3e-4556-8730-09aed1a3ec40",3],["51223bd0-ffd1-11df-a976-0801200c9061",2],["51223bd0-ffd1-11df-a976-0801200c9059",3],["51223bd0-ffd1-11df-a976-1801204c9011",2],["51223bd0-ffd1-11df-a976-0801213c9028",3]]},"coreLeadership":{"name":"Core Set — Leadership","heroes":["51223bd0-ffd1-11df-a976-0801200c9001","51223bd0-ffd1-11df-a976-0801200c9003","51223bd0-ffd1-11df-a976-0801200c9002"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9019",1],["51223bd0-ffd1-11df-a976-0801200c9014",2],["51223bd0-ffd1-11df-a976-0801200c9073",1],["51223bd0-ffd1-11df-a976-0801200c9013",3],["51223bd0-ffd1-11df-a976-0801200c9018",2],["51223bd0-ffd1-11df-a976-0801200c9017",2],["51223bd0-ffd1-11df-a976-0801200c9016",3],["51223bd0-ffd1-11df-a976-0801200c9015",2],["51223bd0-ffd1-11df-a976-0801200c9027",1],["51223bd0-ffd1-11df-a976-0801200c9026",2],["51223bd0-ffd1-11df-a976-0801200c9021",2],["51223bd0-ffd1-11df-a976-0801200c9024",2],["51223bd0-ffd1-11df-a976-0801200c9020",2],["51223bd0-ffd1-11df-a976-0801200c9022",2],["51223bd0-ffd1-11df-a976-0801200c9025",1],["51223bd0-ffd1-11df-a976-0801200c9023",2]]},"coreLore":{"name":"Core Set — Lore","heroes":["51223bd0-ffd1-11df-a976-0801200c9010","51223bd0-ffd1-11df-a976-0801200c9011","51223bd0-ffd1-11df-a976-0801200c9012"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9058",3],["51223bd0-ffd1-11df-a976-0801200c9059",2],["51223bd0-ffd1-11df-a976-0801200c9060",1],["51223bd0-ffd1-11df-a976-0801200c9061",2],["51223bd0-ffd1-11df-a976-0801200c9062",2],["51223bd0-ffd1-11df-a976-0801200c9063",3],["51223bd0-ffd1-11df-a976-0801200c9064",2],["51223bd0-ffd1-11df-a976-0801200c9065",2],["51223bd0-ffd1-11df-a976-0801200c9066",2],["51223bd0-ffd1-11df-a976-0801200c9067",2],["51223bd0-ffd1-11df-a976-0801200c9068",1],["51223bd0-ffd1-11df-a976-0801200c9069",2],["51223bd0-ffd1-11df-a976-0801200c9070",2],["51223bd0-ffd1-11df-a976-0801200c9071",1],["51223bd0-ffd1-11df-a976-0801200c9072",2],["51223bd0-ffd1-11df-a976-0801200c9073",1]]},"coreSpirit":{"name":"Core Set — Spirit","heroes":["51223bd0-ffd1-11df-a976-0801200c9007","51223bd0-ffd1-11df-a976-0801200c9009","51223bd0-ffd1-11df-a976-0801200c9008"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9073",1],["51223bd0-ffd1-11df-a976-0801200c9043",2],["51223bd0-ffd1-11df-a976-0801200c9045",2],["51223bd0-ffd1-11df-a976-0801200c9044",3],["51223bd0-ffd1-11df-a976-0801200c9046",2],["51223bd0-ffd1-11df-a976-0801200c9047",2],["51223bd0-ffd1-11df-a976-0801200c9050",2],["51223bd0-ffd1-11df-a976-0801200c9048",2],["51223bd0-ffd1-11df-a976-0801200c9049",2],["51223bd0-ffd1-11df-a976-0801200c9051",3],["51223bd0-ffd1-11df-a976-0801200c9052",2],["51223bd0-ffd1-11df-a976-0801200c9053",1],["51223bd0-ffd1-11df-a976-0801200c9054",1],["51223bd0-ffd1-11df-a976-0801200c9055",2],["51223bd0-ffd1-11df-a976-0801200c9057",1],["51223bd0-ffd1-11df-a976-0801200c9056",2]]},"coreTactics":{"name":"Core Set — Tactics","heroes":["51223bd0-ffd1-11df-a976-0801200c9004","51223bd0-ffd1-11df-a976-0801200c9006","51223bd0-ffd1-11df-a976-0801200c9005"],"cards":[["51223bd0-ffd1-11df-a976-0801200c9073",1],["51223bd0-ffd1-11df-a976-0801200c9029",3],["51223bd0-ffd1-11df-a976-0801200c9028",3],["51223bd0-ffd1-11df-a976-0801200c9030",2],["51223bd0-ffd1-11df-a976-0801200c9031",1],["51223bd0-ffd1-11df-a976-0801200c9032",3],["51223bd0-ffd1-11df-a976-0801200c9033",2],["51223bd0-ffd1-11df-a976-0801200c9035",2],["51223bd0-ffd1-11df-a976-0801200c9034",2],["51223bd0-ffd1-11df-a976-0801200c9036",2],["51223bd0-ffd1-11df-a976-0801200c9037",1],["51223bd0-ffd1-11df-a976-0801200c9038",1],["51223bd0-ffd1-11df-a976-0801200c9039",2],["51223bd0-ffd1-11df-a976-0801200c9040",2],["51223bd0-ffd1-11df-a976-0801200c9042",1],["51223bd0-ffd1-11df-a976-0801200c9041",2]]}};
+const PTM=[["51223bd0-ffd1-11df-a976-0801200c9119",1,"QuestDeck"],["51223bd0-ffd1-11df-a976-0801200c9121",1,"QuestDeck"],["51223bd0-ffd1-11df-a976-0801200c9123",1,"QuestDeck"],["51223bd0-ffd1-11df-a976-0801200c9125",1,"QuestDeck"],["51223bd0-ffd1-11df-a976-0801200c9074",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9075",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9076",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9089",3,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9090",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9091",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9096",3,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9097",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9098",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9077",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9078",3,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9094",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9095",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9099",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9100",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9079",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9080",2,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9092",1,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9093",3,"EncounterDeck"],["51223bd0-ffd1-11df-a976-0801200c9099",1,"StagingArea"],["51223bd0-ffd1-11df-a976-0801200c9096",1,"StagingArea"]];
+
+// ===== Motor de regras: Passage Through Mirkwood + Riders of Rohan (solo) =====
+const IMGBASE='https://dragncards-lotrlcg.s3.amazonaws.com/cards/English/';
+const BACKS={player:'https://dragncards-lotrlcg.s3.amazonaws.com/cardbacks/player.jpg',encounter:'https://dragncards-lotrlcg.s3.amazonaws.com/cardbacks/encounter.jpg'};
+const P='51223bd0-ffd1-11df-a976-0801200c9';
+const Q1=P+'119',Q2=P+'121',QPATH=P+'123',QBEORN=P+'125';
+let G=null,UID=1;
+const H={ask:null,render(){},onEnd(){}};
+class GameOver extends Error{constructor(win,msg){super(msg);this.win=win}}
+const def=(id,s=0)=>{const c=CARDS[id];return Array.isArray(c)?c[s]:c};
+const mk=(id,side=0)=>({uid:UID++,id,side,d:def(id,side),exh:false,dmg:0,res:0,prog:0,att:[],mods:[],committed:false,shadow:[]});
+function resetCard(c){Object.assign(c,{exh:false,dmg:0,res:0,prog:0,att:[],mods:[],committed:false,shadow:[],feint:false,muster:false,rk:false,host:null});return c}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const N=c=>c.d.name;
+const log=(m,cls='')=>{G.log.push({m,cls,r:G.round});if(G.log.length>400)G.log.shift();H.render()};
+const ask=cfg=>H.ask(cfg);
+const chars=()=>[...G.heroes,...G.allies];
+const isChar=c=>G.heroes.includes(c)||G.allies.includes(c);
+const isHero=c=>G.heroes.includes(c);
+const isEnemy=c=>c.d.type==='Enemy';
+const isLoc=c=>c.d.type==='Location';
+const enemiesInPlay=()=>[...G.staging.filter(isEnemy),...G.engaged];
+const activeName=()=>G.active&&N(G.active);
+const RESTRICTED=['War Axe','Horn of the Mark','Firefoot'];
+const sortEng=a=>[...a].sort((x,y)=>(y.d.eng||0)-(x.d.eng||0));
+
+// Cartas com regras implementadas (o resto da coleção fica bloqueado)
+const IMPLEMENTED=new Set(['Éomer','Lothíriel','Hirgon','Horseback Archer','Feint','A Test of Will','Gandalf','The Red Arrow','Wait no Longer','Riddermark Knight','Oath of Eorl','War Axe','Horn of the Mark','The Muster of Rohan','Westfold Lancer','Westfold Horse-Breaker','Escort from Edoras','Éomund','Ancient Mathom','Astonishing Speed','Guthlaf','West Road Traveller','Forth Eorlingas!','Westfold Outrider','Westfold Horse-breeder','Firefoot']);
+
+function traitsOf(c){const t=[...(c.d.traits||[])];if(N(c)==='Lothíriel'&&G&&chars().some(x=>N(x)==='Éomer'))t.push('Rohan');return t}
+const hasTrait=(c,t)=>traitsOf(c).includes(t);
+function attBonus(a,c,s){const n=N(a);
+  if(n==='The Red Arrow'&&s==='w')return 1;
+  if(n==='War Axe'&&s==='a')return c.att.filter(x=>RESTRICTED.includes(N(x))).length;
+  if(n==='Firefoot'&&s==='a')return N(c)==='Éomer'?2:1;
+  return 0}
+function stat(c,s){
+  let v=c.d[s]||0;
+  for(const m of c.mods)if(m.s===s)v+=m.v;
+  for(const a of c.att)v+=attBonus(a,c,s);
+  for(const e of G.effects)v+=e.fn(c,s)||0;
+  if(N(c)==='Escort from Edoras'&&s==='w'&&c.committed)v+=2;
+  if(N(c)==='Chieftan Ufthak'&&s==='a')v+=2*c.res;
+  return Math.max(0,v)}
+const stagingThreat=()=>G.staging.reduce((t,c)=>t+(isEnemy(c)||isLoc(c)?stat(c,'thr'):0),0);
+const questWill=()=>chars().filter(c=>c.committed).reduce((t,c)=>t+stat(c,'w'),0);
+
+// ---------- ajudantes de escolha ----------
+async function pick(title,cands,o={}){if(!cands.length)return[];const min=Math.min(o.min??1,cands.length);return ask({kind:'pick',title,text:o.text||'',cands,min,max:o.max??1,stat:o.stat,card:o.card})}
+async function pick1(title,cands,o={}){return(await pick(title,cands,{...o,min:1,max:1}))[0]}
+const yesno=(title,text,card)=>ask({kind:'buttons',title,text,card,options:[{label:'Sim',value:true,primary:true},{label:'Não',value:false}]});
+const show=(title,card,text)=>ask({kind:'buttons',title,text,card,options:[{label:'Continuar',value:1,primary:true}]});
+
+// ---------- básicos ----------
+function draw(n,why=''){
+  if(activeName()==='Enchanted Stream'){log('Enchanted Stream está ativa: não podes comprar cartas.');return 0}
+  let k=0;for(let i=0;i<n&&G.deck.length;i++){G.hand.push(G.deck.shift());k++}
+  if(k)log(`Compras ${k} carta${k>1?'s':''}${why}.`);else if(n)log('O teu baralho está vazio.');
+  return k}
+function checkLose(){
+  if(G.threat>=50)throw new GameOver(false,'A tua ameaça chegou a 50.');
+  if(!G.heroes.length)throw new GameOver(false,'Todos os teus heróis foram destruídos.')}
+function raiseThreat(n,why){if(n<=0)return;G.threat+=n;log(`Ameaça +${n}${why?' ('+why+')':''} → ${G.threat}.`,'bad');checkLose()}
+function lowerThreat(n,why){G.threat=Math.max(0,G.threat-n);log(`Ameaça −${n}${why?' ('+why+')':''} → ${G.threat}.`,'good')}
+const spawnInPlay=()=>enemiesInPlay().some(e=>N(e)==="Ungoliant's Spawn");
+function checkWin(){
+  const q=G.quest;if(!q)return;
+  if(q.id===QPATH&&G.flags.spawnDead)throw new GameOver(true,"Encontraste e derrotaste Ungoliant's Spawn. A mensagem chega a Lórien!");
+  if(q.id===QBEORN&&G.qprog>=10&&!spawnInPlay())throw new GameOver(true,"Completaste Beorn's Path e saíste de Mirkwood!")}
+
+function hostOf(a){return[...chars(),G.active,...G.staging].find(h=>h&&h.att.includes(a))}
+function discardAttachment(a){const h=hostOf(a);if(h)h.att=h.att.filter(x=>x!==a);const enc=a.d.back==='encounter';resetCard(a);(enc?G.ediscard:G.discard).push(a);log(`${N(a)} é descartado.`)}
+const myAttachments=(list=chars())=>list.flatMap(c=>c.att.filter(a=>a.d.back!=='encounter'));
+
+async function damage(c,n,why){
+  if(n<=0||!isChar(c))return;
+  c.dmg+=n;log(`${N(c)} sofre ${n} de dano${why?' ('+why+')':''}.`,'bad');
+  if(c.dmg>=stat(c,'hp')){log(`${N(c)} é destruído.`,'bad');await leavePlay(c)}}
+async function leavePlay(c,dest='discard'){
+  if(!isChar(c))return;
+  const tr=traitsOf(c);
+  G.heroes=G.heroes.filter(x=>x!==c);G.allies=G.allies.filter(x=>x!==c);
+  for(const a of[...c.att])discardAttachment(a);
+  resetCard(c);
+  if(dest==='deck'){G.deck.push(c);shuffle(G.deck)}else G.discard.push(c);
+  checkLose();
+  const eo=G.heroes.find(h=>N(h)==='Éomer');
+  if(eo&&!G.flags.eomer){G.flags.eomer=true;eo.mods.push({s:'a',v:2,u:'round'});log('Éomer: +2 ataque até ao fim da ronda.','good')}
+  for(const h of G.heroes){const horn=h.att.find(a=>N(a)==='Horn of the Mark'&&!a.exh);
+    if(horn&&traitsOf(h).some(t=>tr.includes(t))){horn.exh=true;log('Horn of the Mark é esgotado.');draw(1)}}
+  if(N(c)==='Éomund'){for(const x of chars())if(hasTrait(x,'Rohan'))x.exh=false;log('Éomund: todas as personagens Rohan preparam.','good')}
+  H.render()}
+async function damageEnemy(e,n,why){
+  if(n<=0||!enemiesInPlay().includes(e))return;
+  e.dmg+=n;log(`${N(e)} sofre ${n} de dano${why?' ('+why+')':''}.`);
+  if(e.dmg>=stat(e,'hp'))await destroyEnemy(e)}
+async function destroyEnemy(e){
+  G.staging=G.staging.filter(x=>x!==e);G.engaged=G.engaged.filter(x=>x!==e);
+  for(const s of e.shadow)G.ediscard.push(resetCard(s));
+  const vp=e.d.vp;resetCard(e);(vp?G.victory:G.ediscard).push(e);
+  log(`${N(e)} é derrotado!${vp?' (+'+vp+' pontos de vitória)':''}`,'good');
+  if(N(e)==="Ungoliant's Spawn"&&G.quest.id===QPATH)G.flags.spawnDead=true;
+  checkWin()}
+
+// ---------- custos ----------
+function costOf(c,red=0){let v=c.d.cost||0;
+  if(N(c)==='Guthlaf'&&G.heroes.some(h=>hasTrait(h,'Rohan')))v=Math.max(0,v-1);
+  if(red&&v>0)v=Math.max(1,v-red);return v}
+function payers(c){const sp=c.d.sphere;return G.heroes.filter(h=>sp==='Neutral'||h.d.sphere===sp||(N(c)==='The Muster of Rohan'&&hasTrait(h,'Rohan')))}
+const canAfford=(c,red=0)=>payers(c).reduce((t,h)=>t+h.res,0)>=costOf(c,red);
+function pay(c,cost){let left=cost;for(const h of payers(c).sort((a,b)=>b.res-a.res)){const t=Math.min(h.res,left);h.res-=t;left-=t}}
+const uniqueBlocked=c=>c.d.unique&&chars().some(x=>N(x)===N(c));
+function attachTargets(c){const n=N(c),ok=h=>!(RESTRICTED.includes(n)&&h.att.filter(a=>RESTRICTED.includes(N(a))).length>=2);
+  if(n==='The Red Arrow')return G.heroes.filter(h=>hasTrait(h,'Gondor')&&ok(h));
+  if(n==='War Axe')return chars().filter(h=>h.d.sphere==='Tactics'&&!h.att.some(a=>N(a)==='War Axe')&&ok(h));
+  if(n==='Horn of the Mark')return G.heroes.filter(h=>hasTrait(h,'Rohan')&&ok(h));
+  if(n==='Firefoot')return G.heroes.filter(h=>(h.d.sphere==='Tactics'||hasTrait(h,'Rohan'))&&ok(h));
+  if(n==='Ancient Mathom')return[G.active,...G.staging.filter(isLoc)].filter(Boolean);
+  return[]}
+const EVT={'Feint':{t:'combat',ok:()=>G.engaged.length>0},'Astonishing Speed':{t:'action'},'Forth Eorlingas!':{t:'combat'},'The Muster of Rohan':{t:'planning'}};
+const RESP={'A Test of Will':'Resposta: oferecida quando é revelada uma carta com "When Revealed".','Wait no Longer':'Resposta: oferecida no início do passo de preparação.','Oath of Eorl':'Resposta: oferecida no início da fase de combate.'};
+function canPlay(c){
+  const w=G.window;if(!w||!G.hand.includes(c))return false;
+  const t=c.d.type;
+  if(t==='Ally'||t==='Attachment'){if(w!=='planning'||uniqueBlocked(c))return false;if(t==='Attachment'&&!attachTargets(c).length)return false}
+  else if(t==='Event'){const e=EVT[N(c)];if(!e)return false;
+    if(e.t==='planning'&&w!=='planning')return false;if(e.t==='combat'&&w!=='combat')return false;if(e.ok&&!e.ok())return false}
+  return canAfford(c)}
+function canResp(n){const c=G.hand.find(x=>N(x)===n);if(!c||!canAfford(c))return false;
+  if(n==='Oath of Eorl')return chars().some(x=>x.d.unique&&hasTrait(x,'Rohan'))&&chars().some(x=>x.d.unique&&hasTrait(x,'Gondor'));
+  return true}
+function playResponse(n){const c=G.hand.find(x=>N(x)===n);G.hand=G.hand.filter(x=>x!==c);pay(c,costOf(c));G.discard.push(c);log(`Jogas ${n}.`,'play')}
+
+async function playCard(c,{red=0}={}){
+  const cost=costOf(c,red);
+  let tg=null;
+  if(c.d.type==='Attachment')tg=await pick1(`Anexar ${N(c)} a…`,attachTargets(c));
+  G.hand=G.hand.filter(x=>x!==c);pay(c,cost);
+  log(`Jogas ${N(c)} (custo ${cost}).`,'play');
+  if(c.d.type==='Ally')await enterPlay(c,true);
+  else if(tg){tg.att.push(c);log(`${N(c)} fica anexado a ${N(tg)}.`)}
+  else if(c.d.type==='Event'){G.discard.push(c);await EVENTS[N(c)](c)}}
+
+async function enterPlay(c,fromHand=false){
+  resetCard(c);G.allies.push(c);log(`${N(c)} entra em jogo.`);const n=N(c);
+  if(n==='Gandalf'){const ens=enemiesInPlay();
+    const o=await ask({kind:'buttons',title:'Gandalf entra em jogo',text:'Escolhe 1 efeito:',card:c,options:[{label:'Comprar 3 cartas',value:'d',primary:true},...(ens.length?[{label:'4 de dano a 1 inimigo',value:'x'}]:[]),{label:'Reduzir ameaça em 5',value:'t'}]});
+    if(o==='d')draw(3);else if(o==='t')lowerThreat(5,'Gandalf');else{const e=await pick1('Gandalf: escolhe o inimigo',ens,{stat:'hpleft'});await damageEnemy(e,4,'Gandalf')}}
+  if(n==='Westfold Horse-breeder'){const m=G.deck.slice(0,10).filter(x=>(x.d.traits||[]).includes('Mount'));
+    if(m.length){const r=await pick('Westfold Horse-breeder: junta um anexo Mount à mão',m,{min:0,max:1});if(r[0]){G.deck=G.deck.filter(x=>x!==r[0]);G.hand.push(r[0]);log(`${N(r[0])} vai para a tua mão.`)}}
+    else log('Westfold Horse-breeder: não há Mount nas 10 do topo.');shuffle(G.deck)}
+  if(n==='West Road Traveller'&&fromHand&&G.active&&G.staging.some(isLoc)){
+    const r=await pick('West Road Traveller: troca a localização ativa por outra da área de preparação (opcional)',G.staging.filter(isLoc),{min:0,max:1});
+    if(r[0]){G.staging=G.staging.filter(x=>x!==r[0]);G.staging.push(G.active);G.active=r[0];log(`${N(r[0])} passa a ser a localização ativa.`)}}
+  H.render()}
+
+const EVENTS={
+  'Feint':async()=>{const e=await pick1('Feint: escolhe um inimigo enfrentado — não te ataca nesta fase',G.engaged);e.feint=true;log(`${N(e)} não ataca nesta fase.`)},
+  'Astonishing Speed':async()=>{G.effects.push({u:'phase',fn:(c,s)=>s==='w'&&isChar(c)&&hasTrait(c,'Rohan')?2:0});log('Personagens Rohan +2 força de vontade nesta fase.','good')},
+  'Forth Eorlingas!':async()=>{G.flags.forth=true;log('Heróis Rohan podem atacar inimigos na área de preparação nesta fase.','good')},
+  'The Muster of Rohan':async()=>{const al=G.deck.slice(0,10).filter(x=>x.d.type==='Ally'&&(x.d.traits||[]).includes('Rohan'));
+    if(al.length){const r=await pick('The Muster of Rohan: escolhe até 4 aliados Rohan para pôr em jogo',al,{min:0,max:4});
+      for(const c of r){if(uniqueBlocked(c))continue;G.deck=G.deck.filter(x=>x!==c);await enterPlay(c);c.muster=true}}
+    else log('Não há aliados Rohan nas 10 do topo.');shuffle(G.deck)}};
+
+const ABIL={
+  'Westfold Horse-Breaker':{label:'Descartar: preparar um herói',ok:()=>G.heroes.some(h=>h.exh),
+    run:async c=>{const h=await pick1('Escolhe um herói para preparar',G.heroes.filter(h=>h.exh));await leavePlay(c);h.exh=false;log(`${N(h)} prepara.`,'good')}},
+  'Westfold Outrider':{label:'Descartar: enfrentar um inimigo',ok:()=>G.staging.some(isEnemy),
+    run:async c=>{const e=await pick1('Escolhe o inimigo a enfrentar',G.staging.filter(isEnemy));await leavePlay(c);await engage(e)}}};
+const canUse=c=>!!(G.window&&G.allies.includes(c)&&ABIL[N(c)]&&ABIL[N(c)].ok(c));
+
+async function actionWindow(label,kind){
+  for(;;){G.window=kind;
+    const r=await ask({kind:'window',title:label});
+    G.window=null;
+    if(!r||r==='pass')break;
+    if(r.type==='play'&&canPlayIn(r.c,kind))await playCard(r.c);
+    else if(r.type==='abil')await ABIL[N(r.c)].run(r.c)}
+  G.window=null}
+function canPlayIn(c,k){const w=G.window;G.window=k;const ok=canPlay(c);G.window=w;return ok}
+
+// ---------- encontro ----------
+async function engage(e){
+  G.staging=G.staging.filter(x=>x!==e);if(!G.engaged.includes(e))G.engaged.push(e);
+  log(`${N(e)} está agora enfrentado contigo.`,'enc');
+  if(N(e)==='Forest Spider'){e.mods.push({s:'a',v:1,u:'round'});log('Forest Spider: +1 ataque até ao fim da ronda.')}
+  if(N(e)==='Hummerhorns'&&G.heroes.length){const h=await pick1('Hummerhorns: escolhe um herói para sofrer 5 de dano',G.heroes);await damage(h,5,'Hummerhorns')}}
+
+const WR={
+  'King Spider':async()=>{const r=chars().filter(c=>!c.exh);if(r.length){const c=await pick1('King Spider: escolhe e esgota 1 personagem',r);c.exh=true;log(`${N(c)} é esgotado.`)}},
+  "Ungoliant's Spawn":async()=>{const cs=chars().filter(c=>c.committed);for(const c of cs)c.mods.push({s:'w',v:-1,u:'phase'});if(cs.length)log('Personagens em missão: −1 força de vontade nesta fase.','bad')},
+  'Dol Guldur Orcs':async()=>{const r=chars().filter(c=>c.committed);if(r.length){const c=await pick1('Dol Guldur Orcs: escolhe uma personagem em missão para sofrer 2 de dano',r);await damage(c,2,'Dol Guldur Orcs')}},
+  'Black Forest Bats':async()=>{const r=chars().filter(c=>c.committed);if(r.length){const c=await pick1('Black Forest Bats: retira 1 personagem da missão',r);c.committed=false;log(`${N(c)} sai da missão (não prepara).`)}},
+  'Eyes of the Forest':async()=>{const ev=G.hand.filter(c=>c.d.type==='Event');G.hand=G.hand.filter(c=>c.d.type!=='Event');G.discard.push(...ev);log(`Descartas ${ev.length} evento(s) da mão.`,'bad')},
+  'Caught in a Web':async c=>{const h=await pick1('Caught in a Web: escolhe o herói que recebe esta condição',G.heroes);h.att.push(c);c.host=h;log(`Caught in a Web fica anexado a ${N(h)}.`,'bad')},
+  'Driven by Shadow':async()=>{const s=G.staging.filter(x=>isEnemy(x)||isLoc(x));if(!s.length)return'surge';
+    G.effects.push({u:'phase',fn:(c,st)=>st==='thr'&&s.includes(c)&&G.staging.includes(c)?1:0});log('Cada inimigo e localização na preparação: +1 ameaça nesta fase.','bad')},
+  "The Necromancer's Reach":async()=>{for(const c of chars().filter(c=>c.exh))await damage(c,1,"Necromancer's Reach")}};
+
+async function reveal(){
+  if(!G.edeck.length){if(!G.ediscard.length){log('O baralho de encontro está vazio.');return}
+    G.edeck=shuffle(G.ediscard.map(resetCard));G.ediscard=[];log('O descarte de encontro é baralhado e forma um novo baralho.')}
+  const c=G.edeck.shift();log(`Revelada: ${N(c)}.`,'enc');
+  await show('Carta de encontro revelada',c);
+  const wr=WR[N(c)];let cancel=false;
+  if(wr&&canResp('A Test of Will')){cancel=await yesno('Jogar A Test of Will?',`Cancela o efeito "When Revealed" de ${N(c)} (custa 1 recurso Spirit).`,c);if(cancel){playResponse('A Test of Will');log('Efeito cancelado.','good')}}
+  if(isEnemy(c)||isLoc(c))G.staging.push(c);
+  let surge=false;
+  if(wr&&!cancel)surge=(await wr(c))==='surge';
+  if(c.d.type==='Treachery'&&!c.host)G.ediscard.push(c);
+  H.render();
+  if(surge){log('Surge: revela outra carta.','enc');await reveal()}}
+
+const SHADOW={
+  'King Spider':async(e,d,u)=>{for(let i=0;i<(u?2:1);i++){const r=chars().filter(c=>!c.exh);if(!r.length)break;const c=await pick1('Sombra: escolhe e esgota 1 personagem',r);c.exh=true}},
+  'Hummerhorns':async(e,d,u)=>{for(const c of chars())await damage(c,u?2:1,'sombra')},
+  "Ungoliant's Spawn":async(e,d,u)=>raiseThreat(u?8:4,'sombra'),
+  'Dol Guldur Orcs':async(e,d,u)=>{e.mods.push({s:'a',v:u?3:1,u:'attack'});log(`${N(e)} +${u?3:1} ataque.`,'bad')},
+  'Forest Spider':async()=>{const at=myAttachments();if(at.length){const a=await pick1('Sombra: descarta 1 anexo que controlas',at);discardAttachment(a)}},
+  'East Bight Patrol':async(e,d,u)=>{e.mods.push({s:'a',v:1,u:'attack'});log(`${N(e)} +1 ataque.`,'bad');if(u)raiseThreat(3,'sombra')},
+  'Driven by Shadow':async(e,d,u)=>{if(u){for(const a of myAttachments())discardAttachment(a)}
+    else if(d&&myAttachments([d]).length){const a=await pick1('Sombra: descarta 1 anexo do defensor',myAttachments([d]));discardAttachment(a)}}};
+
+function dealShadow(e){if(!G.edeck.length)return;const s=G.edeck.shift();e.shadow.push(s)}
+
+// ---------- missão ----------
+async function placeProgress(n){
+  if(G.active&&n>0){const L=G.active,t=Math.min(n,L.d.qp-L.prog);L.prog+=t;n-=t;log(`${t} progresso em ${N(L)}.`);if(L.prog>=L.d.qp)await explore()}
+  if(n>0){G.qprog+=n;log(`${n} progresso na missão (${G.qprog}/${G.quest.d.qp}).`,'good')}
+  await checkQuest()}
+async function checkQuest(){
+  const q=G.quest;
+  if(q.id===Q1&&G.qprog>=8)await advance(Q2);
+  else if(q.id===Q2&&G.qprog>=2){log('A Fork in the Road: avanças para um dos "A Chosen Path", ao acaso.');await advance(Math.random()<.5?QPATH:QBEORN)}
+  else checkWin()}
+async function advance(id){
+  G.qprog=0;G.quest=mk(id,0);H.render();await show('Nova etapa da missão',G.quest);
+  G.quest=mk(id,1);log(`Etapa ${G.quest.d.cost}: ${N(G.quest)}.`,'phase');await show('Etapa virada',G.quest);
+  if(id===QPATH){const pool=[...G.edeck,...G.ediscard].filter(c=>(c.d.traits||[]).includes('Spider'));
+    if(pool.length){const c=await pick1("Don't Leave the Path!: escolhe 1 carta Spider para a área de preparação",pool);
+      G.edeck=G.edeck.filter(x=>x!==c);G.ediscard=G.ediscard.filter(x=>x!==c);resetCard(c);G.staging.push(c);shuffle(G.edeck);log(`${N(c)} é adicionado à área de preparação.`,'enc')}}
+  checkWin()}
+async function explore(){
+  const L=G.active;G.active=null;log(`${N(L)} foi explorada.`,'good');
+  const math=L.att.some(a=>N(a)==='Ancient Mathom');for(const a of[...L.att]){L.att=L.att.filter(x=>x!==a);G.discard.push(resetCard(a))}
+  resetCard(L);G.ediscard.push(L);
+  if(math){log('Ancient Mathom:');draw(3)}
+  if(N(L)==='Mountains of Mirkwood'&&G.deck.length){const top=G.deck.slice(0,5);
+    const r=await pick('Mountains of Mirkwood: junta à mão 1 das 5 cartas do topo (opcional)',top,{min:0,max:1});
+    if(r[0]){G.deck=G.deck.filter(x=>x!==r[0]);G.hand.push(r[0]);log(`${N(r[0])} vai para a tua mão.`)}shuffle(G.deck)}}
+
+async function questSuccess(com){
+  const hg=com.find(c=>N(c)==='Hirgon'&&isHero(c));
+  if(hg){const al=G.hand.filter(c=>c.d.type==='Ally'&&c.d.sphere==='Tactics'&&!uniqueBlocked(c)&&canAfford(c,1));
+    if(al.length){const r=await pick('Hirgon: joga um aliado Tactics da mão com custo −1 (mín. 1)',al,{min:0,max:1});
+      if(r[0]){const a=r[0];await playCard(a,{red:1});
+        if(G.allies.includes(a)&&await yesno('Hirgon',`Aumentar a ameaça em 1 para dar +1 ataque e +1 defesa a ${N(a)} até ao fim da ronda?`,a)){raiseThreat(1,'Hirgon');a.mods.push({s:'a',v:1,u:'round'},{s:'d',v:1,u:'round'})}}}}
+  for(const l of com.filter(c=>N(c)==='Westfold Lancer'&&G.allies.includes(c))){const t=G.staging.filter(e=>isEnemy(e)&&!e.d.unique);if(!t.length)break;
+    const r=await pick('Westfold Lancer: descarta-o para dar 2 de dano a um inimigo não-único na preparação (opcional)',t,{min:0,max:1,stat:'hpleft'});
+    if(r[0]){await leavePlay(l);await damageEnemy(r[0],2,'Westfold Lancer')}}
+  for(const h of com.filter(isHero)){const ra=h.att.find(a=>N(a)==='The Red Arrow');
+    if(ra&&G.threat>=40&&await yesno('The Red Arrow (Valour)','Põe The Red Arrow na vitória para procurar um aliado nas 5 cartas do topo e pô-lo em jogo?',ra)){
+      h.att=h.att.filter(a=>a!==ra);G.victory.push(resetCard(ra));
+      const al=G.deck.slice(0,5).filter(c=>c.d.type==='Ally'&&!uniqueBlocked(c));
+      if(al.length){const c=await pick1('The Red Arrow: escolhe o aliado',al);G.deck=G.deck.filter(x=>x!==c);await enterPlay(c)}shuffle(G.deck)}}}
+
+// ---------- fases ----------
+function endPhase(){
+  const all=[...chars(),...G.staging,...G.engaged,G.active].filter(Boolean);
+  for(const c of all){c.mods=c.mods.filter(m=>m.u!=='phase'&&m.u!=='attack');c.feint=false}
+  G.effects=G.effects.filter(e=>e.u!=='phase');G.flags.forth=false}
+function phase(name){endPhase();G.phase=name;log(`Ronda ${G.round} · ${name}`,'phase')}
+
+async function resourcePhase(){phase('Recursos');for(const h of G.heroes)h.res++;log('Cada herói recebe 1 recurso.');draw(1)}
+async function planningPhase(){phase('Planeamento');H.openHand&&H.openHand();await actionWindow('Planeamento: joga aliados, anexos e eventos','planning')}
+async function questPhase(){
+  phase('Missão');
+  const ready=chars().filter(c=>!c.exh);
+  const com=await pick(`Missão: escolhe as personagens a comprometer (ameaça na preparação: ${stagingThreat()})`,ready,{min:0,max:ready.length,stat:'w'});
+  for(const c of com){c.committed=true;c.exh=true}
+  log(com.length?`Comprometes ${com.map(N).join(', ')}.`:'Não comprometes ninguém.');
+  const lo=com.find(c=>N(c)==='Lothíriel');
+  if(lo){const lt=traitsOf(lo);const al=G.hand.filter(c=>c.d.type==='Ally'&&(c.d.traits||[]).some(t=>lt.includes(t))&&!uniqueBlocked(c));
+    if(al.length){const r=await pick('Lothíriel: põe em jogo um aliado da mão que partilhe um traço com ela (esgotado e em missão)',al,{min:0,max:1});
+      if(r[0]){G.hand=G.hand.filter(x=>x!==r[0]);await enterPlay(r[0]);r[0].exh=true;r[0].committed=true;G.flags.lothAlly=r[0]}}}
+  await actionWindow('Missão: ações antes da preparação','quest');
+  G.phase='Missão · Preparação';
+  let n=1;
+  if(canResp('Wait no Longer')&&await yesno('Wait no Longer','Procurar um inimigo nas 5 cartas do topo do baralho de encontro, enfrentá-lo e revelar menos 1 carta?')){
+    playResponse('Wait no Longer');const t=G.edeck.slice(0,5).filter(isEnemy);
+    if(t.length){const e=await pick1('Wait no Longer: escolhe o inimigo',t);G.edeck=G.edeck.filter(x=>x!==e);await engage(e)}
+    shuffle(G.edeck);n=0}
+  for(let i=0;i<n;i++)await reveal();
+  await actionWindow(`Missão: força de vontade ${questWill()} contra ameaça ${stagingThreat()}. Ações antes de resolver`,'quest');
+  const W=questWill(),T=stagingThreat(),com2=chars().filter(c=>c.committed);
+  log(`Resolução: força de vontade ${W} contra ameaça ${T}.`,'phase');
+  if(W>T){await placeProgress(W-T);await questSuccess(com2)}
+  else if(T>W)raiseThreat(T-W,'missão falhada');
+  else log('Empate: nada acontece.');
+  for(const c of G.allies.filter(c=>c.committed&&N(c)==='Escort from Edoras')){log('Escort from Edoras é descartado.');await leavePlay(c)}
+  for(const c of chars())c.committed=false;
+  const la=G.flags.lothAlly;G.flags.lothAlly=null;
+  if(la&&G.allies.includes(la)){log(`${N(la)} é baralhado de volta no teu baralho (Lothíriel).`);await leavePlay(la,'deck')}}
+const canTravel=L=>N(L)==='Great Forest Web'?G.heroes.some(h=>!h.exh):N(L)==="Necromancer's Pass"?G.hand.length>=2:true;
+async function travelPhase(){
+  phase('Viagem');
+  if(G.active){log(`${N(G.active)} continua ativa: não há viagem.`);return}
+  const locs=G.staging.filter(isLoc).filter(canTravel);if(!locs.length)return;
+  const L=(await pick('Viagem: escolhe uma localização para viajar (opcional)',locs,{min:0,max:1,stat:'qp'}))[0];if(!L)return;
+  const n=N(L);
+  if(n==='Great Forest Web'){const h=await pick1('Great Forest Web: esgota 1 herói para viajar',G.heroes.filter(h=>!h.exh));h.exh=true}
+  if(n==="Necromancer's Pass")for(let i=0;i<2;i++){const c=G.hand.splice(Math.random()*G.hand.length|0,1)[0];G.discard.push(c);log(`Descartas ${N(c)} ao acaso.`,'bad')}
+  if(n==='Mountains of Mirkwood'){log('Mountains of Mirkwood: revela a carta do topo do encontro.');await reveal()}
+  G.staging=G.staging.filter(x=>x!==L);G.active=L;log(`Viajas para ${n}.`);
+  if(n==='Old Forest Road'){const ex=chars().filter(c=>c.exh);if(ex.length){const r=await pick('Old Forest Road: prepara 1 personagem (opcional)',ex,{min:0,max:1});if(r[0]){r[0].exh=false;log(`${N(r[0])} prepara.`,'good')}}}
+  if(n==='Forest Gate'&&await yesno('Forest Gate','Comprar 2 cartas?',L))draw(2)}
+async function encounterPhase(){
+  phase('Encontro');
+  const en=G.staging.filter(isEnemy);
+  if(en.length){const r=await pick(`Enfrentamento opcional (a tua ameaça: ${G.threat})`,en,{min:0,max:1,stat:'eng'});if(r[0])await engage(r[0])}
+  for(;;){const c=sortEng(G.staging.filter(e=>isEnemy(e)&&e.d.eng<=G.threat));if(!c.length)break;
+    log(`Verificação: ${N(c[0])} (custo ${c[0].d.eng}) ≤ ameaça ${G.threat}.`);await engage(c[0])}}
+async function enemyAttack(e){
+  if(N(e)==='Dol Guldur Beastmaster'){dealShadow(e);log('Dol Guldur Beastmaster recebe outra carta de sombra.')}
+  const cands=chars().filter(c=>!c.exh);
+  const r=await pick(`${N(e)} ataca com ${stat(e,'a')}. Escolhe um defensor (ou nenhum)`,cands,{min:0,max:1,stat:'d',card:e});
+  const d=r[0]||null,u=!d;
+  if(d){d.exh=true;log(`${N(d)} defende contra ${N(e)}.`)}else log(`${N(e)}: ataque sem defesa!`,'bad');
+  for(const s of e.shadow){if(s.up)continue;s.up=true;H.render();await show('Carta de sombra',s,s.d.shadow||'Sem efeito de sombra.');const f=SHADOW[N(s)];if(f&&s.d.shadow)await f(e,d,u)}
+  if(G.engaged.includes(e)){const atk=stat(e,'a');
+    if(d){if(isChar(d)){const dm=atk-stat(d,'d');if(dm>0)await damage(d,dm,N(e));else log(`${N(d)} absorve o ataque.`)}}
+    else if(G.heroes.length){const h=await pick1(`Ataque sem defesa: ${atk} de dano a um herói`,G.heroes,{stat:'hpleft'});await damage(h,atk,`${N(e)}, sem defesa`)}
+    if(N(e)==='Chieftan Ufthak'){e.res++;log('Chieftain Ufthak recebe 1 recurso (+2 ataque cada).','bad')}}
+  for(const c of[...chars(),e])c.mods=c.mods.filter(m=>m.u!=='attack');
+  checkLose()}
+async function playerAttacks(){
+  for(;;){
+    const ready=chars().filter(c=>!c.exh);if(!ready.length)break;
+    const rohanHeroes=ready.filter(c=>isHero(c)&&hasTrait(c,'Rohan'));
+    const targets=[...G.engaged,...(G.flags.forth&&rohanHeroes.length?G.staging.filter(isEnemy):[])];
+    if(!targets.length)break;
+    const e=(await pick('Os teus ataques: escolhe um inimigo para atacar (ou termina)',targets,{min:0,max:1,stat:'hpleft'}))[0];if(!e)break;
+    const pool=G.staging.includes(e)?rohanHeroes:ready;
+    const A=await pick(`Atacantes contra ${N(e)} (defesa ${stat(e,'d')}, vida ${stat(e,'hp')-e.dmg})`,pool,{min:0,max:pool.length,stat:'a',card:e});
+    if(!A.length)continue;
+    for(const c of A)c.exh=true;
+    for(const k of A.filter(c=>N(c)==='Riddermark Knight'))if(await yesno('Riddermark Knight','+2 ataque neste ataque? (é descartado no fim do ataque)',k)){k.mods.push({s:'a',v:2,u:'attack'});k.rk=true}
+    const atk=A.reduce((t,c)=>t+stat(c,'a'),0),dm=Math.max(0,atk-stat(e,'d')),left=stat(e,'hp')-e.dmg;
+    log(`Ataque ${atk} contra defesa ${stat(e,'d')}: ${dm} de dano.`);
+    let ex=0,ffT=null;
+    if(A.length===1&&dm>left){const ff=A[0].att.find(a=>N(a)==='Firefoot'&&!a.exh);const o=G.engaged.filter(x=>x!==e&&!x.d.unique);
+      if(ff&&o.length&&await yesno('Firefoot',`Esgotar Firefoot para passar ${dm-left} de dano em excesso a outro inimigo não-único?`,ff)){ff.exh=true;ex=dm-left;ffT=await pick1('Firefoot: escolhe o inimigo',o,{stat:'hpleft'})}}
+    await damageEnemy(e,dm-ex,'ataque');if(ffT)await damageEnemy(ffT,ex,'Firefoot');
+    for(const k of A.filter(c=>c.rk&&G.allies.includes(c))){log('Riddermark Knight é descartado.');await leavePlay(k)}
+    for(const c of chars())c.mods=c.mods.filter(m=>m.u!=='attack')}}
+async function combatPhase(){
+  phase('Combate');
+  if(!G.engaged.length){
+    const fe=G.hand.find(c=>N(c)==='Forth Eorlingas!');
+    if(!(fe&&G.staging.some(isEnemy)&&canPlayIn(fe,'combat')))return;
+    await actionWindow('Combate: sem inimigos enfrentados (podes jogar Forth Eorlingas!)','combat');
+    if(!G.engaged.length&&!G.flags.forth)return}
+  let oath=false;
+  if(G.engaged.length&&canResp('Oath of Eorl')&&await yesno('Oath of Eorl','Atacar primeiro, antes dos ataques inimigos nesta fase?')){playResponse('Oath of Eorl');oath=true}
+  for(const e of sortEng(G.engaged))dealShadow(e);
+  H.render();
+  await actionWindow('Combate: ações antes dos ataques inimigos','combat');
+  const enemyPhase=async()=>{for(const e of sortEng(G.engaged)){if(!G.engaged.includes(e))continue;if(e.feint){log(`${N(e)} não ataca (Feint).`);continue}await enemyAttack(e)}};
+  if(oath){await playerAttacks();await enemyPhase()}
+  else{await enemyPhase();if(G.engaged.length||G.flags.forth)await actionWindow('Combate: ações antes dos teus ataques','combat');await playerAttacks()}
+  for(const e of G.engaged){G.ediscard.push(...e.shadow.map(resetCard));e.shadow=[]}}
+async function refreshPhase(){
+  phase('Restauro');
+  for(const c of chars()){const web=c.att.find(a=>N(a)==='Caught in a Web');
+    if(web&&c.exh){if(c.res>=2&&await yesno('Caught in a Web',`Pagar 2 recursos de ${N(c)} para o preparar?`,web)){c.res-=2;c.exh=false}else log(`${N(c)} não prepara (Caught in a Web).`,'bad')}
+    else c.exh=false;
+    for(const a of c.att)a.exh=false}
+  raiseThreat(1,'fase de restauro');
+  for(const c of G.allies.filter(c=>N(c)==='Gandalf')){log('Gandalf é descartado no fim da ronda.');await leavePlay(c)}
+  for(const c of G.allies.filter(c=>c.muster)){log(`${N(c)} é descartado (The Muster of Rohan).`);await leavePlay(c)}
+  for(const c of[...chars(),...G.staging,...G.engaged,G.active].filter(Boolean))c.mods=c.mods.filter(m=>m.u!=='round');
+  G.effects=G.effects.filter(e=>e.u!=='round');G.flags.eomer=false}
+
+// ---------- jogo ----------
+function newGame(deck){
+  UID=1;
+  G={threat:0,heroes:[],allies:[],hand:[],deck:[],discard:[],edeck:[],ediscard:[],staging:[],active:null,engaged:[],victory:[],
+     quest:null,qprog:0,round:0,phase:'Preparação do jogo',effects:[],flags:{},log:[],window:null,over:null,deckName:deck.name};
+  G.heroes=deck.heroes.map(id=>mk(id));G.threat=G.heroes.reduce((t,h)=>t+(h.d.cost||0),0);
+  for(const[id,q]of deck.cards)for(let i=0;i<q;i++)G.deck.push(mk(id));shuffle(G.deck);
+  for(const[id,q,g]of PTM){if(g==='QuestDeck')continue;for(let i=0;i<q;i++)(g==='StagingArea'?G.staging:G.edeck).push(mk(id))}
+  shuffle(G.edeck);G.quest=mk(Q1,0);return G}
+async function runGame(){
+  try{
+    log(`Ameaça inicial ${G.threat}.`,'phase');H.render();
+    await show('Passage Through Mirkwood',G.quest,'Preparação: Forest Spider e Old Forest Road são adicionados à área de preparação e o baralho de encontro é baralhado.');
+    G.quest=mk(Q1,1);log('Etapa 1: Flies and Spiders.','phase');
+    G.hand=G.deck.splice(0,6);H.render();
+    const m=await ask({kind:'buttons',title:'Mão inicial',text:'Podes fazer mulligan uma vez: baralhar a mão de volta e comprar 6 novas cartas.',cards:G.hand,options:[{label:'Manter',value:'k',primary:true},{label:'Mulligan',value:'m'}]});
+    if(m==='m'){G.deck.push(...G.hand);G.hand=[];shuffle(G.deck);G.hand=G.deck.splice(0,6);log('Fazes mulligan.')}
+    for(;;){G.round++;await resourcePhase();await planningPhase();await questPhase();await travelPhase();await encounterPhase();await combatPhase();await refreshPhase()}
+  }catch(e){
+    if(e instanceof GameOver){G.over={win:e.win,msg:e.message};G.window=null;log(e.win?'Vitória! '+e.message:'Derrota. '+e.message,e.win?'good':'bad');H.render();H.onEnd()}
+    else{console.error(e);G.error=String(e&&e.stack||e);H.render()}}}
+
+// ===== Interface =====
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SPH={Leadership:'#8d4cb4',Tactics:'#b8392f',Spirit:'#3a90cc',Lore:'#3f9450',Neutral:'#8c8778',Baggins:'#c9a227',Fellowship:'#c9a227'};
+const TP={Hero:'Herói',Ally:'Aliado',Attachment:'Anexo',Event:'Evento',Enemy:'Inimigo',Location:'Localização',Treachery:'Traição',Quest:'Missão'};
+const icon=t=>String(t||'').replace(/\[(\w+)\]/g,(m,k)=>({willpower:'FV',attack:'ATQ',defense:'DEF',threat:'AME',tactics:'Tactics',spirit:'Spirit',leadership:'Leadership',lore:'Lore'}[k]||k));
+const ED={
+  'Revised Core Set':['Passage Through Mirkwood','Journey Along the Anduin','Escape from Dol Guldur','The Oath','The Caves of Nibin-Dûm'],
+  'Core Set':['Passage Through Mirkwood','Journey Along the Anduin','Escape from Dol Guldur'],
+  'Two-Player Limited Edition Starter':['The Oath','The Caves of Nibin-Dûm'],
+  'Shadows of Mirkwood':['The Hunt for Gollum','Conflict at the Carrock','A Journey to Rhosgobel','The Hills of Emyn Muil','The Dead Marshes','Return to Mirkwood'],
+  'Dwarrowdelf':['The Redhorn Gate','Road to Rivendell','The Watcher in the Water','The Long Dark','Foundations of Stone','Shadow and Flame'],
+  'Against the Shadow':["The Steward's Fear",'The Drúadan Forest','Encounter at Amon Dîn','Assault on Osgiliath','The Blood of Gondor','The Morgul Vale'],
+  'The Ring-maker':['The Dunland Trap','The Three Trials','Trouble in Tharbad','The Nîn-in-Eilph',"Celebrimbor's Secret",'The Antlered Crown'],
+  'Angmar Awakened':['The Wastes of Eriador','Escape from Mount Gram','Across the Ettenmoors','The Treachery of Rhudaur','The Battle of Carn Dûm','The Dread Realm'],
+  'Dream-chaser':['Voyage Across Belegaer','The Fate of Númenor','Raid on the Grey Havens','Flight of the Stormcaller','The Thing in the Depths','Temple of the Deceived','The Drowned Ruins','A Storm on Cobas Haven','The City of Corsairs'],
+  'Haradrim':['The Mûmakil','Race Across Harad','Beneath the Sands','The Black Serpent','The Dungeons of Cirith Gurat','The Crossings of Poros'],
+  'Ered Mithrin':['The Wilds of Rhovanion','The Withered Heath','Roam Across Rhovanion','Fire in the Night','The Ghost of Framsburg','Mount Gundabad','The Fate of Wilderland'],
+  'Vengeance of Mordor':['A Shadow in the East','Wrath and Ruin','The City of Ulfast','Challenge of the Wainriders','Under the Ash Mountains','The Land of Sorrow','The Fortress of Nurn']};
+const EDCOL={'Shadows of Mirkwood':'#1f4a2a','Dwarrowdelf':'#4a3220','The Ring-maker':'#3b2559','Dream-chaser':'#173a5c','Haradrim':'#5a1c1c','Ered Mithrin':'#4b4a2a','Vengeance of Mordor':'#4a1f12'};
+const AUTO_SCEN='Passage Through Mirkwood',AUTO_DECK='starterRohan';
+const ui={open:{'Revised Core Set':true},q:'',hand:false,log:false,min:false,sel:new Set(),zoom:null,deckView:null,setup:null,build:null};
+let pending=null;
+H.ask=cfg=>new Promise(res=>{pending={...cfg,res};ui.sel=new Set();ui.min=false;if(cfg.kind==='window')ui.zoom=null;H.render()});
+H.openHand=()=>{ui.hand=true};
+H.onEnd=()=>{pending=null};
+const resolve=v=>{const p=pending;pending=null;ui.zoom=null;p.res(v)};
+
+// ---------- cartas ----------
+function face(d,big){
+  const col=SPH[d.sphere]||(d.type==='Enemy'?'#6d2a22':d.type==='Location'?'#4d5a3a':d.type==='Treachery'?'#4b3a5c':'#5b5145');
+  const st=[];
+  if(d.type==='Hero')st.push(['AME',d.cost]);else if(d.cost!=null&&d.type!=='Quest')st.push(['Custo',d.cost]);
+  if(d.eng!=null)st.push(['Enf',d.eng]);if(d.thr!=null&&d.type!=='Hero')st.push(['AME',d.thr]);
+  for(const[k,l]of[['w','FV'],['a','ATQ'],['d','DEF'],['hp','PV'],['qp','PM']])if(d[k]!=null)st.push([l,d[k]]);
+  return `<div class="face" style="--sc:${col}"><b class="nm">${d.unique?'◆ ':''}${esc(d.name)}</b><i class="ty">${esc(TP[d.type]||d.type)}${d.sphere?' · '+esc(d.sphere):''}${d.type==='Quest'?' · etapa '+d.cost+(d.side||''):''}</i>
+  <div class="st">${st.map(([l,v])=>`<span><small>${l}</small>${v}</span>`).join('')}</div>
+  ${d.traits?.length?`<i class="tr">${esc(d.traits.join('. '))}.</i>`:''}${big||1?`<p class="tx">${esc(icon([d.kw,d.text].filter(Boolean).join(' ')))}</p>`:''}${big&&d.shadow?`<p class="tx sh">${esc(icon(d.shadow))}</p>`:''}</div>`}
+const imgTag=(d,cls='')=>`<img class="${cls}" src="${IMGBASE+d.img}" alt="" loading="lazy" onerror="this.remove()">`;
+const backTag=k=>`<div class="back ${k}"><span>${k==='encounter'?'Encontro':'Jogador'}</span><img src="${BACKS[k]}" alt="" onerror="this.remove()"></div>`;
+function cardEl(c,o={}){
+  const d=c.d,cls=['card',d.type==='Quest'?'wide':'',c.exh?'exh':'',c.committed?'com':'',o.hl?'hl':'',o.sel?'sel':''].join(' ');
+  const b=[];
+  if(c.res)b.push(`<em class="bd res">${c.res}</em>`);if(c.dmg)b.push(`<em class="bd dmg">${c.dmg}</em>`);if(c.prog)b.push(`<em class="bd prg">${c.prog}</em>`);
+  if(c.committed)b.push('<em class="bd com">missão</em>');
+  if(o.thr&&G)b.push(`<em class="bd thr">${stat(c,'thr')}</em>`);
+  if(o.stats&&G&&isChar(c))b.push(`<em class="bd sts">${stat(c,'w')}·${stat(c,'a')}·${stat(c,'d')}</em>`);
+  if(o.atk&&G)b.push(`<em class="bd atk">${stat(c,'a')} atq</em>`);
+  if(o.note)b.push(`<em class="bd note">${esc(o.note)}</em>`);
+  const att=(c.att||[]).map((a,i)=>`<div class="att" data-uid="${a.uid}" style="--i:${i}">${a.exh?'<i class="ax">esgotado</i>':''}<b>${esc(N(a))}</b>${imgTag(a.d)}</div>`).join('');
+  const sh=(c.shadow||[]).map(s=>`<div class="shd" data-uid="${s.uid}">${s.up?`<b>${esc(N(s))}</b>${imgTag(s.d)}`:backTag('encounter')}</div>`).join('');
+  return `<div class="slot ${c.exh?'exh':''} ${d.type==='Quest'?'wide':''}" style="--n:${(c.att||[]).length}">${att}<div class="${cls}" data-uid="${c.uid}">${face(d)}${imgTag(d)}${b.join('')}</div>${sh}</div>`}
+function pile(list,k,label){return `<div class="pile" data-pile="${label}">${list.length?(k==='up'?cardEl(list[list.length-1]):backTag(k)):'<div class="empty"></div>'}<em class="bd cnt">${list.length}</em></div>`}
+function allInst(){if(!G)return[];const z=[...G.heroes,...G.allies,...G.hand,...G.staging,...G.engaged,...G.discard,...G.ediscard,...G.victory,G.active,G.quest].filter(Boolean);
+  for(const c of[...z])z.push(...(c.att||[]),...(c.shadow||[]));if(pending?.cands)z.push(...pending.cands);if(pending?.card)z.push(pending.card);if(pending?.cards)z.push(...pending.cards);return z}
+const find=uid=>allInst().find(c=>c.uid===+uid)||(G&&[...G.deck,...G.edeck].find(c=>c.uid===+uid));
+
+// ---------- páginas ----------
+function nav(){const r=route();return `<header class="top"><b class="brand">Mirkwood<span>LCG</span></b><nav>${[['jogar','Jogar'],['baralhos','Baralhos'],['construtor','Construtor']].map(([h,l])=>`<a href="#${h}" class="${r===h?'on':''}">${l}</a>`).join('')}${G&&!G.over?`<a href="#mesa" class="${r==='mesa'?'on':''} live">Mesa</a>`:''}</nav></header>`}
+function route(){const h=location.hash.slice(1);return['jogar','baralhos','construtor','mesa'].includes(h)?h:'jogar'}
+function pagePlay(){
+  const q=ui.q.toLowerCase();
+  const groups=Object.entries(ED).map(([ed,list])=>{const l=list.filter(s=>!q||s.toLowerCase().includes(q)||ed.toLowerCase().includes(q));if(!l.length)return'';
+    const open=ui.open[ed]||q,auto=l.some(s=>s===AUTO_SCEN);
+    return `<section class="ed ${open?'open':''}" style="--ec:${EDCOL[ed]||'#2a2724'}"><button class="edh" data-ed="${esc(ed)}"><i class="dot ${auto?'on':''}"></i>${esc(ed)}<span class="chev">${open?'▲':'▼'}</span></button>
+      ${open?`<div class="scen">${l.map(s=>s===AUTO_SCEN?`<button class="sc" data-scen="${esc(s)}">${esc(s)}<small>Automatizado</small></button>`:`<div class="sc off">${esc(s)}<small>Bloqueado</small></div>`).join('')}</div>`:''}</section>`}).join('');
+  return `<main class="page"><h1>Jogar</h1><p class="lede">Escolhe um cenário e joga contra o baralho de encontro. O lado do encontro é totalmente automático; tu decides o que comprometer, quem defende e quem ataca. Os cenários e baralhos ainda sem automação aparecem a cinzento.</p>
+  <input class="search" id="q" placeholder="Procurar cenários…" value="${esc(ui.q)}">${groups}
+  <details class="how"><summary>Como jogar</summary><ul><li>Toca numa carta para a ver em grande; se puder ser jogada, aparece o botão Jogar.</li><li>Em cada janela de ações, joga cartas da mão e carrega em Continuar.</li><li>Missão: escolhe quem comprometer. A carta de encontro é revelada sozinha e a missão resolve-se automaticamente.</li><li>Combate: para cada inimigo escolhes um defensor (ou nenhum); depois escolhes os teus ataques.</li><li>Respostas como A Test of Will, Wait no Longer e Oath of Eorl são oferecidas no momento certo.</li></ul></details></main>`}
+function deckList(){let c=[];try{c=JSON.parse(localStorage.getItem('mk.decks')||'[]')}catch(e){}return c}
+function saveDecks(l){try{localStorage.setItem('mk.decks',JSON.stringify(l))}catch(e){}}
+const deckSize=d=>d.cards.reduce((t,[,q])=>t+q,0);
+function heroStrip(ids){return `<div class="hstrip">${ids.map(id=>{const d=def(id);return `<div class="hmini" style="--sc:${SPH[d.sphere]}"><b>${esc(d.name)}</b>${imgTag(d)}</div>`}).join('')}</div>`}
+function pageDecks(){
+  if(ui.deckView){const d=ui.deckView,groups={};for(const[id,q]of d.cards){const x=def(id);(groups[x.type]=groups[x.type]||[]).push([x,q,id])}
+    return `<main class="page"><button class="ghost" id="back">← Baralhos</button><h1>${esc(d.name)}</h1><p class="lede">${deckSize(d)} cartas · ameaça inicial ${d.heroes.reduce((t,id)=>t+def(id).cost,0)}</p>${heroStrip(d.heroes)}
+    ${['Ally','Attachment','Event'].filter(t=>groups[t]).map(t=>`<h2>${TP[t]}s <small>${groups[t].reduce((a,[, q])=>a+q,0)}</small></h2><div class="grid">${groups[t].map(([x,q,id])=>`<div class="tile ${IMPLEMENTED.has(x.name)?'':'locked'}" data-def="${id}"><div class="card">${face(x)}${imgTag(x)}</div><em class="bd cnt">×${q}</em></div>`).join('')}</div>`).join('')}</main>`}
+  const st=Object.entries(STARTERS).map(([k,d])=>{const ok=k===AUTO_DECK;return `<div class="deck ${ok?'':'off'}" data-deck="${k}">${heroStrip(d.heroes)}<b>${esc(d.name)}</b><small>${deckSize(d)} cartas · ${ok?'Automatizado':'Bloqueado'}</small></div>`}).join('');
+  const my=deckList().map((d,i)=>`<div class="deck" data-my="${i}">${heroStrip(d.heroes)}<b>${esc(d.name)}</b><small>${deckSize(d)} cartas · Personalizado</small></div>`).join('');
+  return `<main class="page"><h1>Baralhos</h1><p class="lede">Baralhos iniciais oficiais. Por agora só Riders of Rohan tem todas as cartas automatizadas; os outros ficam bloqueados até as suas cartas terem regras.</p><div class="decks">${st}</div>
+  <h2>Os teus baralhos</h2>${my?`<div class="decks">${my}</div>`:'<p class="muted">Ainda não tens baralhos. Cria um no Construtor.</p>'}</main>`}
+function pool(){const ids=new Set();for(const d of Object.values(STARTERS))for(const id of[...d.heroes,...d.cards.map(x=>x[0])])ids.add(id);return[...ids].map(id=>[id,def(id)])}
+function pageBuilder(){
+  const b=ui.build||(ui.build={name:'Novo baralho',heroes:[],cards:{}});
+  const P=pool(),on=P.filter(([,d])=>IMPLEMENTED.has(d.name)),off=P.filter(([,d])=>!IMPLEMENTED.has(d.name));
+  const n=Object.values(b.cards).reduce((a,v)=>a+v,0),thr=b.heroes.reduce((t,id)=>t+def(id).cost,0);
+  const tile=([id,d])=>{const q=d.type==='Hero'?(b.heroes.includes(id)?1:0):(b.cards[id]||0);
+    return `<div class="tile ${q?'pick':''}" data-def="${id}"><div class="card">${face(d)}${imgTag(d)}</div><div class="qty"><button data-dec="${id}" aria-label="Menos">−</button><b>${q}</b><button data-inc="${id}" aria-label="Mais">+</button></div></div>`};
+  const by=t=>on.filter(([,d])=>d.type===t);
+  return `<main class="page"><h1>Construtor</h1><p class="lede">Monta um baralho só com cartas automatizadas: até 3 heróis e até 3 cópias de cada carta (1 nas únicas e na The Red Arrow).</p>
+  <div class="bbar"><input id="bname" value="${esc(b.name)}" aria-label="Nome do baralho"><span>${b.heroes.length}/3 heróis · ${n} cartas · ameaça ${thr}${n&&n<50?' · baralhos normais têm 50+':''}</span><button class="gold" id="bsave" ${b.heroes.length&&n>=20?'':'disabled'}>Guardar</button><button class="ghost" id="bclear">Limpar</button></div>
+  ${['Hero','Ally','Attachment','Event'].map(t=>`<h2>${TP[t]}s</h2><div class="grid">${by(t).map(tile).join('')}</div>`).join('')}
+  <details class="how"><summary>${off.length} cartas ainda bloqueadas (sem automação)</summary><div class="grid">${off.map(([id,d])=>`<div class="tile locked" data-def="${id}"><div class="card">${face(d)}${imgTag(d)}</div></div>`).join('')}</div></details></main>`}
+
+// ---------- mesa ----------
+function board(){
+  if(!G)return `<main class="page"><p class="muted">Não há jogo a decorrer. <a href="#jogar">Escolhe um cenário.</a></p></main>`;
+  const P=pending,pk=P&&P.kind==='pick'&&!ui.min?null:null;
+  const hl=c=>G.window&&(G.hand.includes(c)?canPlay(c):canUse(c));
+  const zone=(cls,label,inner,extra='')=>`<section class="zone ${cls}"><label>${label}</label><div class="row">${inner}</div>${extra}</section>`;
+  const thrS=stagingThreat();
+  return `<div class="board">
+   <div class="brow r1">
+     ${zone('z-quest','Missão',cardEl(G.quest)+`<em class="bd prgq">${G.qprog}/${G.quest.d.qp??'–'}</em>`)}
+     ${zone('z-pile','Encontro',pile(G.edeck,'encounter','edeck'))}
+     ${zone('z-pile','Descarte',pile(G.ediscard,'up','ediscard'))}
+     ${zone('z-staging grow','Preparação',G.staging.map(c=>cardEl(c,{thr:1})).join(''),`<em class="bd thrT" title="Ameaça total">${thrS}</em>`)}
+   </div>
+   <div class="brow r2">
+     ${zone('z-heroes grow','Heróis',G.heroes.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}
+     ${zone('z-loc','Localização',G.active?cardEl(G.active):'')}
+     ${zone('z-eng grow','Enfrentados',G.engaged.map(c=>cardEl(c,{atk:1,note:c.feint?'Feint':''})).join(''))}
+   </div>
+   <div class="brow r3">
+     ${zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}
+     ${zone('z-pile','Baralho',pile(G.deck,'player','deck'))}
+     ${zone('z-pile','Descarte',pile(G.discard,'up','discard'))}
+     ${G.victory.length?zone('z-pile','Vitória',pile(G.victory,'up','victory')):''}
+   </div>
+  </div>
+  ${ui.hand?`<section class="hand"><label>Mão · ${G.hand.length}</label><div class="row">${G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>'}</div></section>`:''}
+  ${ui.log?`<aside class="log">${G.log.slice(-80).reverse().map(l=>`<p class="${l.cls}">${esc(l.m)}</p>`).join('')}</aside>`:''}
+  <footer class="bar">
+    <a class="ib btn ghost" href="#jogar" aria-label="Menu">Menu</a><button class="ib" id="tlog" aria-label="Registo">${ui.log?'✕':'☰'}</button>
+    <span class="thr" title="Ameaça">${G.threat}<small>ameaça</small></span>
+    <span class="ph">${G.round?G.round+' · ':''}${esc(G.phase)}${G.over?' · fim':''}</span>
+    ${P&&P.kind==='window'?`<span class="wt">${esc(P.title)}</span><button class="gold" id="pass">Continuar</button>`:''}
+    ${P&&P.kind!=='window'&&ui.min?`<button class="gold" id="unmin">Voltar à escolha</button>`:''}
+    <button class="ib hb" id="thand">${ui.hand?'▼':'▲'} Mão ${G.hand.length}</button>
+  </footer>
+  ${G.error?`<div class="modal"><div class="box"><h3>Erro no motor</h3><pre>${esc(G.error)}</pre><a class="gold btn" href="#jogar">Voltar</a></div></div>`:''}
+  ${G.over?`<div class="modal"><div class="box end ${G.over.win?'win':'lose'}"><h3>${G.over.win?'Vitória':'Derrota'}</h3><p>${esc(G.over.msg)}</p><p class="muted">Ronda ${G.round} · ameaça ${G.threat} · ${G.victory.reduce((t,c)=>t+(c.d.vp||0),0)} pontos de vitória</p><div class="btns"><button class="gold" id="again">Jogar outra vez</button><a class="ghost btn" href="#jogar">Menu</a></div></div></div>`:''}
+  ${P&&P.kind!=='window'&&!ui.min?promptBox(P):''}
+  <div class="rotate"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M50 40a20 20 0 0 1-14 16M40 52l-4 4 4 4"/></svg><b>Vira o telemóvel para jogar</b><p>A mesa precisa de ecrã na horizontal. O jogo fica como está.</p></div>`}
+function promptBox(P){
+  const head=`<div class="ph2"><h3>${esc(P.title)}</h3><button class="ib" id="min" aria-label="Ver mesa">–</button></div>`;
+  if(P.kind==='buttons')return `<div class="modal"><div class="box">${head}${P.text?`<p>${esc(icon(P.text))}</p>`:''}
+    <div class="pbody">${P.card?`<div class="big">${cardEl(P.card)}</div>`:''}${P.card&&!P.cards?`<div class="ztext">${zText(P.card)}</div>`:''}${P.cards?`<div class="row wrap">${P.cards.map(c=>cardEl(c)).join('')}</div>`:''}</div>
+    <div class="btns">${P.options.map((o,i)=>`<button class="${o.primary?'gold':'ghost'}" data-opt="${i}">${esc(o.label)}</button>`).join('')}</div></div></div>`;
+  const ok=ui.sel.size>=P.min&&ui.sel.size<=P.max;
+  const lab=c=>P.stat==='hpleft'?`${stat(c,'hp')-c.dmg} PV`:P.stat==='qp'?`${c.d.qp} PM · ${stat(c,'thr')} AME`:P.stat==='eng'?`enfrent. ${c.d.eng}`:P.stat?`${{w:'FV',a:'ATQ',d:'DEF'}[P.stat]} ${stat(c,P.stat)}${isChar(c)?` · ${stat(c,'hp')-c.dmg} PV`:''}`:'';
+  const sum=P.stat&&['w','a'].includes(P.stat)?[...ui.sel].reduce((t,u)=>t+stat(find(u),P.stat),0):null;
+  return `<div class="modal"><div class="box">${head}${P.text?`<p>${esc(P.text)}</p>`:''}
+    <div class="pbody">${P.card?`<div class="big sm">${cardEl(P.card)}</div>`:''}<div class="row wrap picks">${P.cands.map(c=>`<div class="pk">${cardEl(c,{sel:ui.sel.has(c.uid)})}<small>${esc(lab(c))}</small></div>`).join('')}</div></div>
+    <div class="btns"><span class="muted">${P.max>1?`${ui.sel.size} escolhida(s)`:''}${sum!=null?` · total ${sum}`:''}</span>${P.min===0?`<button class="ghost" id="none">${P.max>1?'Nenhuma':'Nenhum / passar'}</button>`:''}<button class="gold" id="ok" ${ok?'':'disabled'}>Confirmar</button></div></div></div>`}
+function zText(c){const d=c.d;return `<b class="zn">${esc(d.name)}</b><i>${esc(TP[d.type]||d.type)}${d.sphere?' · '+esc(d.sphere):''}${d.traits?.length?' · '+esc(d.traits.join('. ')):''}</i>
+  ${d.kw?`<p><b>${esc(d.kw)}</b></p>`:''}${d.text?`<p>${esc(icon(d.text))}</p>`:''}${d.shadow?`<p class="sh">${esc(icon(d.shadow))}</p>`:''}
+  ${G&&isChar(c)?`<p class="cur">Atual: FV ${stat(c,'w')} · ATQ ${stat(c,'a')} · DEF ${stat(c,'d')} · PV ${stat(c,'hp')-c.dmg}/${stat(c,'hp')}</p>`:''}
+  ${G&&(isEnemy(c)&&enemiesInPlay().includes(c))?`<p class="cur">Atual: ATQ ${stat(c,'a')} · DEF ${stat(c,'d')} · PV ${stat(c,'hp')-c.dmg}/${stat(c,'hp')} · AME ${stat(c,'thr')}</p>`:''}
+  ${!IMPLEMENTED.has(d.name)&&d.back==='player'?'<p class="muted">Carta ainda sem automação.</p>':''}`}
+function zoomBox(){
+  const z=ui.zoom;if(!z)return'';const c=z.c||{d:z.d,att:[]};
+  const btn=[];
+  if(z.c&&G&&pending?.kind==='window'){
+    if(G.hand.includes(z.c)){if(canPlay(z.c))btn.push(`<button class="gold" id="zplay">Jogar (custo ${costOf(z.c)})</button>`);else btn.push(`<span class="muted">${RESP[N(z.c)]||'Não pode ser jogada agora.'}</span>`)}
+    if(canUse(z.c))btn.push(`<button class="gold" id="zabil">${esc(ABIL[N(z.c)].label)}</button>`)}
+  return `<div class="modal" id="zbg"><div class="box zoom"><div class="ph2"><h3>${esc(c.d.name)}</h3><button class="ib" id="zclose" aria-label="Fechar">✕</button></div>
+   <div class="pbody"><div class="big">${z.c?cardEl(z.c):`<div class="slot"><div class="card">${face(c.d)}${imgTag(c.d)}</div></div>`}</div><div class="ztext">${zText(c)}${z.c&&z.c.att?.length?`<p>Anexos: ${z.c.att.map(a=>esc(N(a))).join(', ')}</p>`:''}</div></div>
+   <div class="btns">${btn.join('')}</div></div></div>`}
+function pileBox(){const p=ui.pile;if(!p||!G)return'';const l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[p.k];
+  return `<div class="modal"><div class="box"><div class="ph2"><h3>${esc(p.title)} · ${l.length}</h3><button class="ib" id="pclose" aria-label="Fechar">✕</button></div><div class="row wrap picks">${[...l].reverse().map(c=>cardEl(c)).join('')}</div></div></div>`}
+function setupBox(){
+  const s=ui.setup;if(!s)return'';
+  const seg=(label,opts,val)=>`<div class="fld"><label>${label}</label><div class="seg">${opts.map(([v,t,ok])=>`<button class="${v===val?'on':''}" ${ok?'':'disabled'}>${t}</button>`).join('')}</div></div>`;
+  if(s.step===1)return `<div class="modal"><div class="box"><div class="ph2"><h3>${esc(s.scen)}</h3><button class="ib" id="scx" aria-label="Fechar">✕</button></div>
+    <div class="fields">${seg('Modo',[['pve','PvE',1],['enc','Encounter',0]],'pve')}${seg('Jogadores',[[1,'1',1],[2,'2',0],[3,'3',0],[4,'4',0]],1)}${seg('Dificuldade',[['e','Easy',0],['n','Normal',1],['x','Nightmare',0]],'n')}${seg('Modo campanha',[['y','Yes',0],['ex','Expert',0],['no','No',1]],'no')}</div>
+    <p class="muted">Só as opções automatizadas estão ativas.</p><div class="btns"><button class="ghost" id="scx2">Cancelar</button><button class="gold" id="sc1">Seguinte</button></div></div></div>`;
+  const my=deckList();
+  return `<div class="modal"><div class="box"><div class="ph2"><h3>Escolhe o teu baralho</h3><button class="ib" id="scx" aria-label="Fechar">✕</button></div>
+   <div class="dpick">${Object.entries(STARTERS).map(([k,d])=>`<button class="dp ${s.deck==='s:'+k?'on':''}" data-dp="s:${k}" ${k===AUTO_DECK?'':'disabled'}>${esc(d.name)}<small>${k===AUTO_DECK?'Baralho inicial':'Bloqueado'}</small></button>`).join('')}
+   ${my.map((d,i)=>`<button class="dp ${s.deck==='m:'+i?'on':''}" data-dp="m:${i}">${esc(d.name)}<small>Personalizado · ${deckSize(d)} cartas</small></button>`).join('')}</div>
+   <div class="btns"><button class="ghost" id="scx2">Cancelar</button><button class="gold" id="sc2" ${s.deck?'':'disabled'}>Começar</button></div></div></div>`}
+
+H.render=function(){
+  const r=route(),app=$('#app');
+  const body=r==='mesa'?board():r==='baralhos'?pageDecks():r==='construtor'?pageBuilder():pagePlay();
+  const y=window.scrollY;
+  app.className=r==='mesa'?'is-board':'';
+  app.innerHTML=(r==='mesa'?'':nav())+body+pileBox()+zoomBox()+setupBox();
+  if(r!=='mesa')window.scrollTo(0,y);
+  const q=$('#q');if(q&&ui.focusQ){q.focus();q.setSelectionRange(q.value.length,q.value.length)}
+};
+let lastDeck=null;
+function startWith(deck){lastDeck=deck;ui.setup=null;ui.hand=false;ui.log=false;newGame(deck);location.hash='mesa';H.render();runGame()}
+
+document.addEventListener('input',e=>{if(e.target.id==='q'){ui.q=e.target.value;ui.focusQ=true;H.render();ui.focusQ=false}if(e.target.id==='bname')ui.build.name=e.target.value});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,[data-uid],[data-def],[data-deck],[data-my],.pile,#zbg');if(!t)return;
+  const id=t.id,P=pending;
+  if(t.dataset.ed){ui.open[t.dataset.ed]=!ui.open[t.dataset.ed];return H.render()}
+  if(t.dataset.scen){ui.setup={step:1,scen:t.dataset.scen,deck:'s:'+AUTO_DECK};return H.render()}
+  if(id==='scx'||id==='scx2'){ui.setup=null;return H.render()}
+  if(id==='sc1'){ui.setup.step=2;return H.render()}
+  if(t.dataset.dp){ui.setup.deck=t.dataset.dp;return H.render()}
+  if(id==='sc2'){const[k,v]=ui.setup.deck.split(':');const d=k==='s'?{name:STARTERS[v].name,heroes:STARTERS[v].heroes,cards:STARTERS[v].cards}:deckList()[+v];return startWith(d)}
+  if(t.dataset.deck){if(t.classList.contains('off')&&!e.target.closest('.deck'))return;ui.deckView=STARTERS[t.dataset.deck];window.scrollTo(0,0);return H.render()}
+  if(t.dataset.my){ui.deckView=deckList()[+t.dataset.my];window.scrollTo(0,0);return H.render()}
+  if(id==='back'){ui.deckView=null;return H.render()}
+  if(t.dataset.inc||t.dataset.dec){const did=t.dataset.inc||t.dataset.dec,d=def(did),b=ui.build,inc=!!t.dataset.inc;
+    if(d.type==='Hero'){if(inc&&!b.heroes.includes(did)&&b.heroes.length<3)b.heroes.push(did);if(!inc)b.heroes=b.heroes.filter(x=>x!==did)}
+    else{const lim=d.unique||d.name==='The Red Arrow'?(d.name==='The Red Arrow'?1:3):3;b.cards[did]=Math.max(0,Math.min(lim,(b.cards[did]||0)+(inc?1:-1)));if(!b.cards[did])delete b.cards[did]}
+    return H.render()}
+  if(id==='bsave'){const b=ui.build,l=deckList();l.push({name:b.name||'Baralho',heroes:b.heroes,cards:Object.entries(b.cards)});saveDecks(l);ui.build=null;location.hash='baralhos';ui.deckView=null;return H.render()}
+  if(id==='bclear'){ui.build=null;return H.render()}
+  if(t.dataset.def&&!e.target.closest('.qty')){ui.zoom={d:def(t.dataset.def)};return H.render()}
+  if(id==='zclose'||(id==='zbg'&&e.target===t)){ui.zoom=null;return H.render()}
+  if(id==='zplay'){const c=ui.zoom.c;return resolve({type:'play',c})}
+  if(id==='zabil'){const c=ui.zoom.c;return resolve({type:'abil',c})}
+  if(id==='pass')return resolve('pass');
+  if(id==='tlog'){ui.log=!ui.log;return H.render()}
+  if(id==='thand'){ui.hand=!ui.hand;return H.render()}
+  if(id==='min'){ui.min=true;return H.render()}
+  if(id==='unmin'){ui.min=false;return H.render()}
+  if(id==='again'){return startWith(lastDeck)}
+  if(t.dataset.opt!=null&&P)return resolve(P.options[+t.dataset.opt].value);
+  if(id==='none'&&P)return resolve([]);
+  if(id==='ok'&&P)return resolve(P.cands.filter(c=>ui.sel.has(c.uid)));
+  if(t.dataset.uid){const c=find(t.dataset.uid);if(!c)return;
+    if(t.closest('.pile')&&!t.closest('.modal')){const k=t.closest('.pile').dataset.pile;if(k!=='edeck'&&k!=='deck'){ui.pile={k,title:{discard:'O teu descarte',ediscard:'Descarte de encontro',victory:'Vitória'}[k]};return H.render()}}
+    if(P&&P.kind==='pick'&&!ui.min&&P.cands.includes(c)){
+      if(ui.sel.has(c.uid))ui.sel.delete(c.uid);else{if(P.max===1)ui.sel.clear();if(ui.sel.size<P.max)ui.sel.add(c.uid)}return H.render()}
+    if(t.closest('.zoom'))return;
+    ui.zoom={c};return H.render()}
+  if(id==='pclose'){ui.pile=null;return H.render()}
+  if(t.classList.contains('pile')&&G){const k=t.dataset.pile,l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[k];if(l&&l.length){ui.pile={k,title:{discard:'O teu descarte',ediscard:'Descarte de encontro',victory:'Vitória'}[k]};return H.render()}}
+});
+window.addEventListener('hashchange',()=>{if(location.hash!=='#baralhos')ui.deckView=null;ui.zoom=null;H.render()});
+H.render();
+}
+
+</script>
+</body>
+</html>
