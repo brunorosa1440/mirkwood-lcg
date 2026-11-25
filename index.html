@@ -97,6 +97,8 @@ button.sc:hover{border-color:var(--gold)}
 .thrT{right:10px;top:10px;background:#5a1c18;color:#ffd9d2;border:1px solid var(--red);font-size:16px}
 
 /* mesa */
+#app.desk{--ch:clamp(80px,calc((100dvh - 70px)/4 - 34px),230px);--cw:calc(var(--ch)*.716)}
+#app.desk .wt{max-width:none}
 #app.is-board{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
 .board{flex:1;display:flex;flex-direction:column;gap:6px;padding:6px var(--sx) 0;padding-top:max(6px,env(safe-area-inset-top));min-height:0}
 .brow{flex:1;display:flex;gap:6px;min-height:0}
@@ -602,6 +604,7 @@ let pending=null;
 H.ask=cfg=>new Promise(res=>{pending={...cfg,res};ui.sel=new Set();ui.min=false;if(cfg.kind==='window')ui.zoom=null;H.render()});
 H.openHand=()=>{ui.hand=true};
 H.onEnd=()=>{pending=null;try{localStorage.removeItem('mk.save')}catch(e){}};
+const desk=()=>matchMedia('(min-width:1000px) and (min-height:640px)').matches;
 const resolve=v=>{const p=pending;pending=null;ui.zoom=null;p.res(v)};
 
 // ---------- cartas ----------
@@ -677,6 +680,7 @@ function board(){
   const hl=c=>G.window&&(G.hand.includes(c)?canPlay(c):canUse(c));
   const zone=(cls,label,inner,extra='')=>`<section class="zone ${cls}"><label>${label}</label><div class="row">${inner}</div>${extra}</section>`;
   const thrS=stagingThreat();
+  const piles=zone('z-pile','Baralho',pile(G.deck,'player','deck'))+zone('z-pile','Descarte',pile(G.discard,'up','discard'))+(G.victory.length?zone('z-pile','Vitória',pile(G.victory,'up','victory')):'');
   return `<div class="board">
    <div class="brow r1">
      ${zone('z-quest','Missão',cardEl(G.quest)+`<em class="bd prgq">${G.qprog}/${G.quest.d.qp??'–'}</em>`)}
@@ -689,11 +693,9 @@ function board(){
      ${zone('z-loc','Localização',G.active?cardEl(G.active):'')}
      ${zone('z-eng grow','Enfrentados',G.engaged.map(c=>cardEl(c,{atk:1,note:c.feint?'Feint':''})).join(''))}
    </div>
-   <div class="brow r3">
-     ${ui.hand?zone('z-play z-hand grow',`Mão · ${G.hand.length}`,G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>'):zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}
-     ${zone('z-pile','Baralho',pile(G.deck,'player','deck'))}
-     ${zone('z-pile','Descarte',pile(G.discard,'up','discard'))}
-     ${G.victory.length?zone('z-pile','Vitória',pile(G.victory,'up','victory')):''}
+   ${desk()?`<div class="brow r3">${zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}</div>
+   <div class="brow r4">${zone('z-hand grow',`Mão · ${G.hand.length}`,G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>')}${piles}`:`<div class="brow r3">
+     ${ui.hand?zone('z-play z-hand grow',`Mão · ${G.hand.length}`,G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>'):zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}${piles}`}
    </div>
   </div>
   ${ui.log?`<aside class="log">${G.log.slice(-80).reverse().map(l=>`<p class="${l.cls}">${esc(l.m)}</p>`).join('')}</aside>`:''}
@@ -703,7 +705,7 @@ function board(){
     <span class="ph">${G.round?G.round+' · ':''}${esc(G.phase)}${G.over?' · fim':''}</span>
     ${P&&P.kind==='window'?`<span class="wt">${esc(P.title)}</span><button class="gold" id="pass">Continuar</button>`:''}
     ${P&&P.kind!=='window'&&ui.min?`<button class="gold" id="unmin">Voltar à escolha</button>`:''}
-    <button class="ib hb" id="thand">${ui.hand?'▼':'▲'} Mão ${G.hand.length}</button>
+    ${desk()?'':`<button class="ib hb" id="thand">${ui.hand?'▼':'▲'} Mão ${G.hand.length}</button>`}
   </footer>
   ${G.error?`<div class="modal"><div class="box"><h3>Erro no motor</h3><pre>${esc(G.error)}</pre><a class="gold btn" href="#jogar">Voltar</a></div></div>`:''}
   ${G.over?`<div class="modal"><div class="box end ${G.over.win?'win':'lose'}"><h3>${G.over.win?'Vitória':'Derrota'}</h3><p>${esc(G.over.msg)}</p><p class="muted">Ronda ${G.round} · ameaça ${G.threat} · ${G.victory.reduce((t,c)=>t+(c.d.vp||0),0)} pontos de vitória</p><div class="btns"><button class="gold" id="again">Jogar outra vez</button><a class="ghost btn" href="#jogar">Menu</a></div></div></div>`:''}
@@ -756,7 +758,7 @@ H.render=function(){
   const r=route(),app=$('#app');
   const body=r==='mesa'?board():r==='baralhos'?pageDecks():r==='construtor'?pageBuilder():pagePlay();
   const y=window.scrollY;
-  app.className=(r==='mesa'?'is-board ':'')+(r==='mesa'||ui.setup?'need-land':'');
+  app.className=(r==='mesa'?'is-board ':'')+(r==='mesa'&&desk()?'desk ':'')+(r==='mesa'||ui.setup?'need-land':'');
   app.innerHTML=(r==='mesa'?'':nav())+body+pileBox()+zoomBox()+setupBox()+rotateBox();
   if(r!=='mesa')window.scrollTo(0,y);
   const q=$('#q');if(q&&ui.focusQ){q.focus();q.setSelectionRange(q.value.length,q.value.length)}
@@ -814,6 +816,7 @@ document.addEventListener('click',e=>{
   if(id==='pclose'){ui.pile=null;return H.render()}
   if(t.classList.contains('pile')&&G){const k=t.dataset.pile,l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[k];if(l&&l.length){ui.pile={k,title:{discard:'O teu descarte',ediscard:'Descarte de encontro',victory:'Vitória'}[k]};return H.render()}}
 });
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>route()==='mesa'&&H.render(),120)});
 window.addEventListener('hashchange',()=>{if(location.hash!=='#baralhos')ui.deckView=null;ui.zoom=null;H.render()});
 H.render();
 }
