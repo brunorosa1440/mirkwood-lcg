@@ -237,6 +237,20 @@ document.addEventListener('click',e=>{
   if(id==='pclose'){ui.pile=null;return H.render()}
   if(t.classList.contains('pile')&&G){const k=t.dataset.pile,l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[k];if(l&&l.length){ui.pile={k,title:{discard:'O teu descarte',ediscard:'Descarte de encontro',victory:'Vitória'}[k]};return H.render()}}
 });
+// pré-visualização ao passar o rato (só em ecrãs com rato)
+const hov=document.createElement('div');hov.id='hov';document.body.appendChild(hov);
+const fine=matchMedia('(hover:hover) and (pointer:fine)');
+const hideHov=()=>{hov.className=''};
+document.addEventListener('mouseover',e=>{
+  if(!fine.matches)return;
+  const t=e.target.closest('[data-uid],[data-def]');if(!t)return hideHov();
+  const c=t.dataset.uid?find(t.dataset.uid):{d:def(t.dataset.def)};
+  if(!c||!c.d||(t.classList.contains('shd')&&!c.up))return hideHov();
+  const r=t.getBoundingClientRect(),left=r.left+r.width/2>innerWidth*.55;
+  hov.innerHTML=`<div class="card ${c.d.type==='Quest'?'wide':''}">${face(c.d,true)}${imgTag(c.d)}</div>`;
+  hov.className='on '+(left?'l':'r')+(c.d.type==='Quest'?' w':'')});
+document.addEventListener('mousedown',hideHov);
+document.addEventListener('mouseleave',hideHov);
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>route()==='mesa'&&H.render(),120)});
 window.addEventListener('hashchange',()=>{if(location.hash!=='#baralhos')ui.deckView=null;ui.zoom=null;H.render()});
 H.render();
