@@ -10,8 +10,9 @@ vm.runInContext(fs.readFileSync(__dirname+'/../src/data.js','utf8')+fs.readFileS
      if(pl.length&&Math.random()<.7) return {type:'play',c:pl[Math.random()*pl.length|0]};
      if(ab.length&&Math.random()<.1) return {type:'abil',c:ab[0]};
      return 'pass'}
+   if(cfg.kind==='pay') return Math.random()<.85?defaultAlloc(cfg.card,cfg.cost):null;
    if(cfg.kind==='buttons') return cfg.options[0].value;
-   if(cfg.kind==='pick'){ const t=cfg.title; let c=[...cfg.cands]; if(cfg.stat) c.sort((a,b)=>stat(b,cfg.stat==='hpleft'?'hp':cfg.stat)-stat(a,cfg.stat==='hpleft'?'hp':cfg.stat)); if(t.startsWith('Missão: escolhe')) return c.slice(0,Math.max(0,c.length-1)); if(t.startsWith('Atacantes')) return c; if(t.includes('Enfrentamento opcional')) return []; return c.slice(0,Math.max(cfg.min,1)).slice(0,cfg.max)}
+   if(cfg.kind==='pick'){ const t=cfg.title; let c=[...cfg.cands]; if(cfg.stat) c.sort((a,b)=>stat(b,cfg.stat==='hpleft'?'hp':cfg.stat)-stat(a,cfg.stat==='hpleft'?'hp':cfg.stat)); if(t.startsWith('Quest: select')) return c.slice(0,Math.max(0,c.length-1)); if(t.startsWith('Attackers')) return c; if(t.includes('Optional engagement')) return []; return c.slice(0,Math.max(cfg.min,1)).slice(0,cfg.max)}
  };
  newGame(deck); await runGame(); return {over:G.over,err:G.error,round:G.round,steps,quest:G.quest&&N(G.quest),threat:G.threat};
 }`,ctx);

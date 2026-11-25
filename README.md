@@ -4,7 +4,7 @@ Protótipo pessoal para jogar *The Lord of the Rings: The Card Game* a solo no b
 
 **Jogar:** https://brunorosa1440.github.io/mirkwood-lcg/
 
-- Menu: Jogar (cenários), Baralhos (baralhos iniciais), Construtor
+- Interface em inglês: Play (cenários), Decks (baralhos iniciais), Deck builder
 - Automatizado: cenário **Passage Through Mirkwood** com o baralho inicial **Riders of Rohan** (Éomer, Lothíriel, Hirgon); o resto aparece bloqueado
 - Imagens das cartas carregadas do DragnCards (S3); dados das cartas do [dragncards-lotrlcg-plugin](https://github.com/seastan/dragncards-lotrlcg-plugin)
 
