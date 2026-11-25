@@ -113,13 +113,12 @@ function board(){
      ${zone('z-eng grow','Enfrentados',G.engaged.map(c=>cardEl(c,{atk:1,note:c.feint?'Feint':''})).join(''))}
    </div>
    <div class="brow r3">
-     ${zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}
+     ${ui.hand?zone('z-play z-hand grow',`Mão · ${G.hand.length}`,G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>'):zone('z-play grow','Área de jogo',G.allies.map(c=>cardEl(c,{stats:1,hl:hl(c)})).join(''))}
      ${zone('z-pile','Baralho',pile(G.deck,'player','deck'))}
      ${zone('z-pile','Descarte',pile(G.discard,'up','discard'))}
      ${G.victory.length?zone('z-pile','Vitória',pile(G.victory,'up','victory')):''}
    </div>
   </div>
-  ${ui.hand?`<section class="hand"><label>Mão · ${G.hand.length}</label><div class="row">${G.hand.map(c=>cardEl(c,{hl:hl(c)})).join('')||'<p class="muted">Mão vazia.</p>'}</div></section>`:''}
   ${ui.log?`<aside class="log">${G.log.slice(-80).reverse().map(l=>`<p class="${l.cls}">${esc(l.m)}</p>`).join('')}</aside>`:''}
   <footer class="bar">
     <a class="ib btn ghost" href="#jogar" aria-label="Menu">Menu</a><button class="ib" id="tlog" aria-label="Registo">${ui.log?'✕':'☰'}</button>
