@@ -4,7 +4,7 @@ const BACKS={player:'https://dragncards-lotrlcg.s3.amazonaws.com/cardbacks/playe
 const P='51223bd0-ffd1-11df-a976-0801200c9';
 const Q1=P+'119',Q2=P+'121',QPATH=P+'123',QBEORN=P+'125';
 let G=null,UID=1;
-const H={ask:null,render(){},onEnd(){}};
+const H={ask:null,render(){},onEnd(){},save(){}};
 class GameOver extends Error{constructor(win,msg){super(msg);this.win=win}}
 const def=(id,s=0)=>{const c=CARDS[id];return Array.isArray(c)?c[s]:c};
 const mk=(id,side=0)=>({uid:UID++,id,side,d:def(id,side),exh:false,dmg:0,res:0,prog:0,att:[],mods:[],committed:false,shadow:[]});
@@ -390,15 +390,27 @@ function newGame(deck){
   for(const[id,q]of deck.cards)for(let i=0;i<q;i++)G.deck.push(mk(id));shuffle(G.deck);
   for(const[id,q,g]of PTM){if(g==='QuestDeck')continue;for(let i=0;i<q;i++)(g==='StagingArea'?G.staging:G.edeck).push(mk(id))}
   shuffle(G.edeck);G.quest=mk(Q1,0);return G}
-async function runGame(){
+// ---------- gravar / retomar (checkpoint no início de cada fase) ----------
+function saveState(){return JSON.stringify(G,(k,v)=>k==='d'?undefined:k==='host'?(v&&v.uid):k==='effects'?[]:k==='lothAlly'?null:k==='log'?v.slice(-80):v)}
+function loadState(str){
+  const g=JSON.parse(str);let max=0;
+  const fix=o=>{if(Array.isArray(o)){o.forEach(fix);return}if(o&&typeof o==='object'){if(o.uid&&o.id){o.d=def(o.id,o.side||0);max=Math.max(max,o.uid)}for(const k in o)if(k!=='d')fix(o[k])}};
+  fix(g);G=g;UID=max+1;
+  for(const c of[...G.heroes,...G.allies])for(const a of c.att)if(a.host)a.host=c;
+  Object.assign(G,{window:null,over:null,error:null,effects:[]});return G}
+const PHASES=[resourcePhase,planningPhase,questPhase,travelPhase,encounterPhase,combatPhase,refreshPhase];
+async function runGame(resume=false){
   try{
+    if(resume){log(`Jogo retomado: ronda ${G.round+(G.ph===0?1:0)}.`,'phase')}
+    else{
     log(`Ameaça inicial ${G.threat}.`,'phase');H.render();
     await show('Passage Through Mirkwood',G.quest,'Preparação: Forest Spider e Old Forest Road são adicionados à área de preparação e o baralho de encontro é baralhado.');
     G.quest=mk(Q1,1);log('Etapa 1: Flies and Spiders.','phase');
     G.hand=G.deck.splice(0,6);H.render();
     const m=await ask({kind:'buttons',title:'Mão inicial',text:'Podes fazer mulligan uma vez: baralhar a mão de volta e comprar 6 novas cartas.',cards:G.hand,options:[{label:'Manter',value:'k',primary:true},{label:'Mulligan',value:'m'}]});
     if(m==='m'){G.deck.push(...G.hand);G.hand=[];shuffle(G.deck);G.hand=G.deck.splice(0,6);log('Fazes mulligan.')}
-    for(;;){G.round++;await resourcePhase();await planningPhase();await questPhase();await travelPhase();await encounterPhase();await combatPhase();await refreshPhase()}
+    G.ph=0}
+    for(;;){H.save();if(G.ph===0)G.round++;await PHASES[G.ph]();G.ph=(G.ph+1)%PHASES.length}
   }catch(e){
     if(e instanceof GameOver){G.over={win:e.win,msg:e.message};G.window=null;log(e.win?'Vitória! '+e.message:'Derrota. '+e.message,e.win?'good':'bad');H.render();H.onEnd()}
     else{console.error(e);G.error=String(e&&e.stack||e);H.render()}}}

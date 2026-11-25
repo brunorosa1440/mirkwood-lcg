@@ -138,12 +138,14 @@ button.sc:hover{border-color:var(--gold)}
 .dpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:10px}
 .dp{display:grid;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#14110e;min-height:56px}
 .dp small{color:var(--mut)}.dp.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.dp:disabled{opacity:.35;cursor:default}
+.box.sm{width:min(620px,100%)}
+.link{background:none;border:0;color:var(--mut);min-height:44px;padding:0 4px;margin-right:auto;font-size:17px}.btns .link+.ghost{margin-left:auto}
 .end{text-align:center;max-width:460px}.end h3{font:700 40px Cinzel,serif}.end.win h3{color:var(--gold)}.end.lose h3{color:#f0a196}.end .btns{justify-content:center}
 pre{white-space:pre-wrap;font-size:12px;color:var(--mut)}
 .rotate{display:none}
 @media (orientation:portrait) and (max-width:820px){
-  .is-board .rotate{display:flex;position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--mut);gap:10px}
-  .is-board .rotate b{color:var(--ink);font-size:20px}}
+  .need-land .rotate{display:flex;position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--mut);gap:10px}
+  .is-board .rotate b{color:var(--ink);font-size:20px}.rotate .ghost{margin-top:8px}}
 @media (max-height:500px){.board{gap:4px}.zone{padding:14px 6px 4px}.bar{min-height:48px}.ph{font-size:14px}.wt{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>

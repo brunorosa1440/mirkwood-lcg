@@ -24,7 +24,7 @@ const ui={open:{'Revised Core Set':true},q:'',hand:false,log:false,min:false,sel
 let pending=null;
 H.ask=cfg=>new Promise(res=>{pending={...cfg,res};ui.sel=new Set();ui.min=false;if(cfg.kind==='window')ui.zoom=null;H.render()});
 H.openHand=()=>{ui.hand=true};
-H.onEnd=()=>{pending=null};
+H.onEnd=()=>{pending=null;try{localStorage.removeItem('mk.save')}catch(e){}};
 const resolve=v=>{const p=pending;pending=null;ui.zoom=null;p.res(v)};
 
 // ---------- cartas ----------
@@ -131,8 +131,7 @@ function board(){
   </footer>
   ${G.error?`<div class="modal"><div class="box"><h3>Erro no motor</h3><pre>${esc(G.error)}</pre><a class="gold btn" href="#jogar">Voltar</a></div></div>`:''}
   ${G.over?`<div class="modal"><div class="box end ${G.over.win?'win':'lose'}"><h3>${G.over.win?'Vitória':'Derrota'}</h3><p>${esc(G.over.msg)}</p><p class="muted">Ronda ${G.round} · ameaça ${G.threat} · ${G.victory.reduce((t,c)=>t+(c.d.vp||0),0)} pontos de vitória</p><div class="btns"><button class="gold" id="again">Jogar outra vez</button><a class="ghost btn" href="#jogar">Menu</a></div></div></div>`:''}
-  ${P&&P.kind!=='window'&&!ui.min?promptBox(P):''}
-  <div class="rotate"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M50 40a20 20 0 0 1-14 16M40 52l-4 4 4 4"/></svg><b>Vira o telemóvel para jogar</b><p>A mesa precisa de ecrã na horizontal. O jogo fica como está.</p></div>`}
+  ${P&&P.kind!=='window'&&!ui.min?promptBox(P):''}`}
 function promptBox(P){
   const head=`<div class="ph2"><h3>${esc(P.title)}</h3><button class="ib" id="min" aria-label="Ver mesa">–</button></div>`;
   if(P.kind==='buttons')return `<div class="modal"><div class="box">${head}${P.text?`<p>${esc(icon(P.text))}</p>`:''}
@@ -160,9 +159,14 @@ function zoomBox(){
    <div class="btns">${btn.join('')}</div></div></div>`}
 function pileBox(){const p=ui.pile;if(!p||!G)return'';const l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[p.k];
   return `<div class="modal"><div class="box"><div class="ph2"><h3>${esc(p.title)} · ${l.length}</h3><button class="ib" id="pclose" aria-label="Fechar">✕</button></div><div class="row wrap picks">${[...l].reverse().map(c=>cardEl(c)).join('')}</div></div></div>`}
+const rotateBox=()=>`<div class="rotate"><svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M50 40a20 20 0 0 1-14 16M40 52l-4 4 4 4"/></svg><b>Vira o telemóvel para jogar</b><p>${ui.setup?'Escolhe as opções do jogo com o ecrã na horizontal.':'A mesa precisa de ecrã na horizontal. O jogo fica como está.'}</p><button class="ghost" id="rotback">← Cenários</button></div>`;
+function savedGame(){if(G&&!G.over&&!G.error)return{round:G.round,deck:G.deckName,live:true};try{const s=JSON.parse(localStorage.getItem('mk.save')||'null');if(s)return{round:s.round,deck:s.deck.name,save:s}}catch(e){}return null}
 function setupBox(){
   const s=ui.setup;if(!s)return'';
   const seg=(label,opts,val)=>`<div class="fld"><label>${label}</label><div class="seg">${opts.map(([v,t,ok])=>`<button class="${v===val?'on':''}" ${ok?'':'disabled'}>${t}</button>`).join('')}</div></div>`;
+  if(s.step===0){const g=savedGame();return `<div class="modal"><div class="box sm"><div class="ph2"><h3>${esc(s.scen)}</h3><button class="ib" id="scx" aria-label="Fechar">✕</button></div>
+    <p>Há um jogo em curso: ronda ${Math.max(1,g.round)}, 1 jogador, baralho ${esc(g.deck)}.</p>
+    <div class="btns"><button class="link" id="scx2">← Cenários</button><button class="ghost" id="snew">Novo jogo</button><button class="gold" id="scont">Continuar</button></div></div></div>`}
   if(s.step===1)return `<div class="modal"><div class="box"><div class="ph2"><h3>${esc(s.scen)}</h3><button class="ib" id="scx" aria-label="Fechar">✕</button></div>
     <div class="fields">${seg('Modo',[['pve','PvE',1],['enc','Encounter',0]],'pve')}${seg('Jogadores',[[1,'1',1],[2,'2',0],[3,'3',0],[4,'4',0]],1)}${seg('Dificuldade',[['e','Easy',0],['n','Normal',1],['x','Nightmare',0]],'n')}${seg('Modo campanha',[['y','Yes',0],['ex','Expert',0],['no','No',1]],'no')}</div>
     <p class="muted">Só as opções automatizadas estão ativas.</p><div class="btns"><button class="ghost" id="scx2">Cancelar</button><button class="gold" id="sc1">Seguinte</button></div></div></div>`;
@@ -176,20 +180,29 @@ H.render=function(){
   const r=route(),app=$('#app');
   const body=r==='mesa'?board():r==='baralhos'?pageDecks():r==='construtor'?pageBuilder():pagePlay();
   const y=window.scrollY;
-  app.className=r==='mesa'?'is-board':'';
-  app.innerHTML=(r==='mesa'?'':nav())+body+pileBox()+zoomBox()+setupBox();
+  app.className=(r==='mesa'?'is-board ':'')+(r==='mesa'||ui.setup?'need-land':'');
+  app.innerHTML=(r==='mesa'?'':nav())+body+pileBox()+zoomBox()+setupBox()+rotateBox();
   if(r!=='mesa')window.scrollTo(0,y);
   const q=$('#q');if(q&&ui.focusQ){q.focus();q.setSelectionRange(q.value.length,q.value.length)}
 };
 let lastDeck=null;
-function startWith(deck){lastDeck=deck;ui.setup=null;ui.hand=false;ui.log=false;newGame(deck);location.hash='mesa';H.render();runGame()}
+H.save=()=>{try{localStorage.setItem('mk.save',JSON.stringify({scen:AUTO_SCEN,deck:lastDeck,round:G.round,state:saveState()}))}catch(e){}};
+const clearSave=()=>{try{localStorage.removeItem('mk.save')}catch(e){}};
+function startWith(deck){clearSave();lastDeck=deck;ui.setup=null;ui.hand=false;ui.log=false;newGame(deck);location.hash='mesa';H.render();runGame()}
 
 document.addEventListener('input',e=>{if(e.target.id==='q'){ui.q=e.target.value;ui.focusQ=true;H.render();ui.focusQ=false}if(e.target.id==='bname')ui.build.name=e.target.value});
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,[data-uid],[data-def],[data-deck],[data-my],.pile,#zbg');if(!t)return;
   const id=t.id,P=pending;
   if(t.dataset.ed){ui.open[t.dataset.ed]=!ui.open[t.dataset.ed];return H.render()}
-  if(t.dataset.scen){ui.setup={step:1,scen:t.dataset.scen,deck:'s:'+AUTO_DECK};return H.render()}
+  if(t.dataset.scen){ui.setup={step:savedGame()?0:1,scen:t.dataset.scen,deck:'s:'+AUTO_DECK};return H.render()}
+  if(id==='rotback'){ui.setup=null;location.hash='jogar';return H.render()}
+  if(id==='snew'){ui.setup.step=1;return H.render()}
+  if(id==='scont'){const g=savedGame();ui.setup=null;
+    if(g&&g.live){location.hash='mesa';return H.render()}
+    if(g&&g.save){lastDeck=g.save.deck;try{loadState(g.save.state)}catch(e){clearSave();ui.setup={step:1,scen:AUTO_SCEN,deck:'s:'+AUTO_DECK};return H.render()}
+      pending=null;ui.hand=false;ui.log=false;location.hash='mesa';H.render();runGame(true)}
+    return}
   if(id==='scx'||id==='scx2'){ui.setup=null;return H.render()}
   if(id==='sc1'){ui.setup.step=2;return H.render()}
   if(t.dataset.dp){ui.setup.deck=t.dataset.dp;return H.render()}
