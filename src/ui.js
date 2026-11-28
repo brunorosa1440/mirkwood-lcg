@@ -178,7 +178,7 @@ const allocArr=()=>Object.entries(ui.alloc).map(([u,n])=>[+u,n]).filter(x=>x[1]>
 const allocSum=()=>Object.values(ui.alloc).reduce((a,b)=>a+b,0);
 function promptBox(P){
   const head=`<div class="ph2"><h3>${esc(P.title)}</h3><button class="ib" id="min" aria-label="See the table">–</button></div>`;
-  if(P.kind==='pay')return `<div class="modal"><div class="box">${head}<div class="pbody"><div class="big">${cardEl(P.card)}</div><div class="ztext">${P.text?`<p>${esc(icon(P.text))}</p>`:''}${payPanel(P.card,P.cost)}</div></div>
+  if(P.kind==='pay')return `<div class="modal"><div class="box">${head}<div class="pbody"><div class="big">${cardEl(P.card)}</div><div class="ztext">${P.text?`<p class="why">${esc(icon(P.text))}</p>`:''}${zText(P.card)}${payPanel(P.card,P.cost)}</div></div>
     <div class="btns"><button class="ghost" id="payno">Don't play</button><button class="gold" id="payok" ${allocSum()===P.cost?'':'disabled'}>Play</button></div></div></div>`;
   if(P.kind==='buttons')return `<div class="modal"><div class="box">${head}${P.text?`<p>${esc(icon(P.text))}</p>`:''}
     <div class="pbody">${P.card?`<div class="big">${cardEl(P.card)}</div>`:''}${P.card&&!P.cards?`<div class="ztext">${zText(P.card)}</div>`:''}${P.cards?`<div class="row wrap">${P.cards.map(c=>cardEl(c)).join('')}</div>`:''}</div>
@@ -203,7 +203,7 @@ function zoomBox(){
       else btn.push(`<span class="muted">${RESP[N(z.c)]||'This card cannot be played right now.'}</span>`)}
     if(canUse(z.c))btn.push(`<button class="gold" id="zabil">${esc(ABIL[N(z.c)].label)}</button>`)}
   return `<div class="modal" id="zbg"><div class="box zoom"><div class="ph2"><h3>${extra?'Play '+esc(c.d.name)+'?':esc(c.d.name)}</h3><button class="ib" id="zclose" aria-label="Close">✕</button></div>
-   <div class="pbody"><div class="big">${z.c?cardEl(z.c):`<div class="slot"><div class="card">${face(c.d)}${imgTag(c.d)}</div></div>`}</div><div class="ztext">${extra||zText(c)}${!extra&&z.c&&z.c.att?.length?`<p>Attachments: ${z.c.att.map(a=>esc(N(a))).join(', ')}</p>`:''}</div></div>
+   <div class="pbody"><div class="big">${z.c?cardEl(z.c):`<div class="slot"><div class="card">${face(c.d)}${imgTag(c.d)}</div></div>`}</div><div class="ztext">${zText(c)}${extra}${!extra&&z.c&&z.c.att?.length?`<p>Attachments: ${z.c.att.map(a=>esc(N(a))).join(', ')}</p>`:''}</div></div>
    <div class="btns">${btn.join('')}</div></div></div>`}
 function pileBox(){const p=ui.pile;if(!p||!G)return'';const l={discard:G.discard,ediscard:G.ediscard,victory:G.victory}[p.k];
   return `<div class="modal"><div class="box"><div class="ph2"><h3>${esc(p.title)} · ${l.length}</h3><button class="ib" id="pclose" aria-label="Close">✕</button></div><div class="row wrap picks">${[...l].reverse().map(c=>cardEl(c)).join('')}</div></div></div>`}
